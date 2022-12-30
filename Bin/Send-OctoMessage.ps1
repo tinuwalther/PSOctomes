@@ -43,11 +43,20 @@ The node.yml contains all the config to deploy an ESXi Host and will be used as 
 
 I found a few new ideas, to optimize this workflow.
 "@
+
+<# 
+$cred = 'Discord','Telegram','Mastodon' | ForEach-Object {
+    Get-Credential -Message "Enter the Token for $_" -UserName $_
+}
+$cred | Export-Clixml
+#>
+$creds = Import-Clixml
+
 #endregion
 
 #region Discord
 if($SendToDiscord){
-    $Token = Read-Host -Prompt 'Enter the Token for Discord' -MaskInput
+    $Token = [System.Net.NetworkCredential]::new("", ($creds | Where-Object UserName -eq Discord).Password).Password #Read-Host -Prompt 'Enter the Token for Discord' -MaskInput
     $Properties = @{
         WebhookUrl         = "https://discord.com/api/webhooks/$($Token)"
         #SectionTitle       = $SectionTitle
@@ -61,7 +70,7 @@ if($SendToDiscord){
 
 #region Telegram
 if($SendToTelegram){
-    $Token = Read-Host -Prompt 'Enter the Token for Telegram' -MaskInput
+    $Token = [System.Net.NetworkCredential]::new("", ($creds | Where-Object UserName -eq Telegram).Password).Password #Read-Host -Prompt 'Enter the Token for Telegram' -MaskInput
     $Properties = @{
         WebhookUrl = "https://api.telegram.org/bot$($Token)/sendMessage"
         Message    = $SectionDescription
@@ -75,7 +84,7 @@ if($SendToTelegram){
 #region Mastodon
 if($SendToMastodon){
     $MastodonInstance = 'techhub.social'
-    $Token = Read-Host -Prompt 'Enter the Token for Mastodon' -MaskInput
+    $Token = [System.Net.NetworkCredential]::new("", ($creds | Where-Object UserName -eq Mastodon).Password).Password #Read-Host -Prompt 'Enter the Token for Mastodon' -MaskInput
     $Properties = @{
         WebhookUrl = "https://$($MastodonInstance)/api/v1/statuses?access_token=$($Token)"
         Message    = $SectionDescription
@@ -93,3 +102,4 @@ if($SendToTwitter){
     .\Bin\New-TwitterMessage.ps1 @Properties -Verbose
 }
 #endregion
+
