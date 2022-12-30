@@ -1,10 +1,9 @@
-#region New-DiscordMessage
 [CmdletBinding()]
     param(
         [Parameter(Mandatory=$true)]
         [String] $WebhookUrl,
 
-        [Parameter(Mandatory=$true)]
+        [Parameter(Mandatory=$false)]
         [String] $SectionTitle,
 
         [Parameter(Mandatory=$true)]
@@ -13,10 +12,10 @@
         [Parameter(Mandatory=$false)]
         [Int] $SectionColor = 5789910, #5858D6
 
-        [Parameter(Mandatory=$true)]
+        [Parameter(Mandatory=$false)]
         [String] $FactTitle,
 
-        [Parameter(Mandatory=$true)]
+        [Parameter(Mandatory=$false)]
         [String] $FactMessage,
 
         [Parameter(Mandatory=$false)]
@@ -38,41 +37,53 @@ process{
 
     try{
 
-    # Facts
-    $EmbededFacts = @{
-        'name'   = $FactTitle
-        'value'  = $FactMessage
-        'inline' = $false
-    }
-    Write-Verbose "EmbededFacts:"
-    Write-Verbose "$($EmbededFacts | Out-String)"
+        # Facts
+        if([String]::IsNullOrEmpty($FactTitle)){
+            # New section with no embed object
+            $EmbededSection = @{
+                'title'       = $SectionTitle
+                'description' = $SectionDescription
+                'color'       = $SectionColor
+            }
+            Write-Verbose "EmbededSection:"
+            Write-Verbose "$($EmbededSection | Out-String)"
+        }else{
+            $EmbededFacts = @{
+                'name'   = $FactTitle
+                'value'  = $FactMessage
+                'inline' = $false
+            }
+            Write-Verbose "EmbededFacts:"
+            Write-Verbose "$($EmbededFacts | Out-String)"
 
-    # New section as embed object
-    $EmbededSection = @{
-        'title'       = $SectionTitle
-        'description' = $SectionDescription
-        'color'       = $SectionColor
-        "fields"      = @($EmbededFacts)
-    }
-    Write-Verbose "EmbededSection:"
-    Write-Verbose "$($EmbededSection | Out-String)"
+            # New section as embed object
+            $EmbededSection = @{
+                'title'       = $SectionTitle
+                'description' = $SectionDescription
+                'color'       = $SectionColor
+                "fields"      = @($EmbededFacts)
+            }
+            Write-Verbose "EmbededSection:"
+            Write-Verbose "$($EmbededSection | Out-String)"
+        }
 
-    # Full message
-    $FullMessage = @{
-        'username'   = $AuthorName
-        'avatar_url' = $AuthorAvatar
-        "embeds"     = @($EmbededSection)
-    }
-    Write-Verbose "FullMessage:"
-    Write-Verbose "$($FullMessage | Out-String)"
+        # Full message
+        $FullMessage = @{
+            'username'   = $AuthorName
+            'avatar_url' = $AuthorAvatar
+            "embeds"     = @($EmbededSection)
+        }
+        Write-Verbose "FullMessage:"
+        Write-Verbose "$($FullMessage | Out-String)"
 
-    $Properties = @{
-        Uri         = $WebhookUrl
-        Body        = (ConvertTo-Json -Depth 6 -InputObject $FullMessage)
-        Method      = 'Post'
-        ContentType = 'application/json; charset=UTF-8'
-    }
-    $ret = Invoke-RestMethod @Properties
+        $Properties = @{
+            Uri         = $WebhookUrl
+            Body        = (ConvertTo-Json -Depth 6 -InputObject $FullMessage)
+            Method      = 'Post'
+            ContentType = 'application/json; charset=UTF-8'
+        }
+        $Response = Invoke-RestMethod @Properties
+        $ret = $Response.result
 
     }catch{
         Write-Warning $('ScriptName:', $($_.InvocationInfo.ScriptName), 'LineNumber:', $($_.InvocationInfo.ScriptLineNumber), 'Message:', $($_.Exception.Message) -Join ' ')
@@ -89,4 +100,3 @@ end{
     Write-Verbose $('Finished in:', $Formatted -Join ' ')
     return $ret
 }
-#endregion
