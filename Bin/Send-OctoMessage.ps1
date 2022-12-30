@@ -86,7 +86,6 @@ if($SendToMastodon){
 
 #region Twitter
 if($SendToTwitter){
-    $Token = Read-Host -Prompt 'Enter the Token' -MaskInput
     $Properties = @{
         WebhookUrl = "https://twitter.com/statuses/update.xml"
         Message    = $SectionDescription
