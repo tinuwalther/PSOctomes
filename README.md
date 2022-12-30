@@ -29,7 +29,7 @@ Hi
 
 I send this message to multiple messenger with #PowerShell.
 
-https://github.com/tinuwalther/PSOctomes/blob/main/README.md
+https://github.com/tinuwalther/PSOctomes
 "@
 .\Bin\Send-OctoMessage.ps1 -Message $Message -SendToDiscord -SendToTelegram -SendToMastodon
 ````
