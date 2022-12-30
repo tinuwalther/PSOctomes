@@ -18,7 +18,7 @@ I found a few new ideas, to optimize this workflow.
 
 #region Discord
 $Properties = @{
-    WebhookUrl         = Read-Host -Prompt 'Enter the WebhookcUrl' -MaskInput
+    WebhookUrl         = Read-Host -Prompt 'Enter the WebhookUrl' -MaskInput
     SectionTitle       = $SectionTitle
     SectionDescription = $SectionDescription
     FactTitle          = $FactTitle
