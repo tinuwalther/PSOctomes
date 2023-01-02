@@ -18,19 +18,17 @@ This code is freely available to use and or modify.
 
 [CmdletBinding(SupportsShouldProcess)]
 param (
+    [Parameter(Mandatory=$false)]
+    [ValidateNotNullOrEmpty()]
+    [string] $ApiUri,
+
     [Parameter(Mandatory=$true)]
     [ValidateNotNullOrEmpty()]
     [string] $Message,
 
-    [Parameter(Mandatory=$false)]
-    [ValidateNotNullOrEmpty()]
-    [string] $WebhookUrl,
 
-    [Parameter(HelpMessage = "Enter a date and time to schedule the post. It must be at least 5 minutes in the future.")]
-    [ValidateScript({
-        ($_ - (Get-Date)).totalMinutes -ge 5
-    })]
-    [DateTime]$Scheduled
+    [Parameter(Mandatory=$true)]
+    [Object] $PSOctomes
 )
 
 begin {
@@ -47,31 +45,25 @@ process {
 
         Write-Verbose "Posting to $WebhookUrl"
 
-        $body = @{
+        $payload = @{
             status = $Message
         }
 
-        Write-Verbose "Posting $($body.status)"
-        if ($Scheduled) {
-            $isoDate = ("{0:u}" -f $scheduled.ToUniversalTime()).replace(" ", "T")
-            $body.add("scheduled_at", $isoDate)
-            Write-Verbose "Sending at $($body.scheduled_at)"
-        }
+        Write-Verbose "Payload:"
+        Write-Verbose "$($payload | Out-String)"
 
+        $Token = [System.Net.NetworkCredential]::new("", ($PSOctomes | Where-Object UserName -eq Mastodon).Password).Password #Read-Host -Prompt 'Enter the Token for Mastodon' -MaskInput
         $Properties = @{
-            Uri         = $WebhookUrl
-            Method      = "POST"
-            ContentType = "application/x-www-form-urlencoded"
-            Body        = $body
-            ErrorAction = "Stop"
+            Uri         = "$($ApiUri)?access_token=$($Token)"
+            Method      = 'POST'
+            #Body        = $payload
+            #ContentType = 'application/x-www-form-urlencoded'
+            ContentType = 'application/json; charset=UTF-8'
+            Body        = (ConvertTo-Json -Depth 6 -InputObject $payload)
+            ErrorAction = 'Stop'
         }
-
-        Write-Verbose "Using these parameters:"
-        $Properties | Out-String | Write-Verbose
-        if ($pscmdlet.ShouldProcess($Message, "Posting to $WebhookUrl")) {
-            $Response = Invoke-RestMethod @Properties
-            $ret = $Response.result
-        }
+        $ret = Invoke-RestMethod @Properties
+        $ret | ConvertTo-Json
 
     }catch{
         Write-Warning $('ScriptName:', $($_.InvocationInfo.ScriptName), 'LineNumber:', $($_.InvocationInfo.ScriptLineNumber), 'Message:', $($_.Exception.Message) -Join ' ')

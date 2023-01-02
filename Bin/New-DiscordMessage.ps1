@@ -1,7 +1,7 @@
 [CmdletBinding()]
     param(
         [Parameter(Mandatory=$true)]
-        [String] $WebhookUrl,
+        [String] $ApiUri,
 
         [Parameter(Mandatory=$false)]
         [String] $SectionTitle,
@@ -22,7 +22,10 @@
         [String] $AuthorName = 'The PowerSHell Hook',
 
         [Parameter(Mandatory=$false)]
-        [String] $AuthorAvatar = 'http://img1.wikia.nocookie.net/__cb20111027212138/pichipichipitchadventures/es/images/thumb/f/fd/Captain-Hook-Wallpaper-disney-villains-976702_1024_768.png/456px-Captain-Hook-Wallpaper-disney-villains-976702_1024_768.png'
+        [String] $AuthorAvatar = 'http://img1.wikia.nocookie.net/__cb20111027212138/pichipichipitchadventures/es/images/thumb/f/fd/Captain-Hook-Wallpaper-disney-villains-976702_1024_768.png/456px-Captain-Hook-Wallpaper-disney-villains-976702_1024_768.png',
+
+        [Parameter(Mandatory=$true)]
+        [Object] $PSOctomes
 )
 
 begin{
@@ -37,7 +40,7 @@ process{
 
     try{
 
-        # Facts
+        #region Facts
         if([String]::IsNullOrEmpty($FactTitle)){
             # New section with no embed object
             $EmbededSection = @{
@@ -45,8 +48,6 @@ process{
                 'description' = $SectionDescription
                 'color'       = $SectionColor
             }
-            Write-Verbose "EmbededSection:"
-            Write-Verbose "$($EmbededSection | Out-String)"
         }else{
             $EmbededFacts = @{
                 'name'   = $FactTitle
@@ -63,27 +64,30 @@ process{
                 'color'       = $SectionColor
                 "fields"      = @($EmbededFacts)
             }
-            Write-Verbose "EmbededSection:"
-            Write-Verbose "$($EmbededSection | Out-String)"
         }
+        Write-Verbose "EmbededSection:"
+        Write-Verbose "$($EmbededSection | Out-String)"
+        #endregion
 
         # Full message
-        $FullMessage = @{
+        $payload = @{
             'username'   = $AuthorName
             'avatar_url' = $AuthorAvatar
             "embeds"     = @($EmbededSection)
         }
         Write-Verbose "FullMessage:"
-        Write-Verbose "$($FullMessage | Out-String)"
+        Write-Verbose "$($payload | Out-String)"
 
+        $Token = [System.Net.NetworkCredential]::new("", ($creds | Where-Object UserName -eq Discord).Password).Password #Read-Host -Prompt 'Enter the Token for Discord' -MaskInput
         $Properties = @{
-            Uri         = $WebhookUrl
-            Body        = (ConvertTo-Json -Depth 6 -InputObject $FullMessage)
-            Method      = 'Post'
+            Uri         = "$($ApiUri)/$($Token)" #"https://discord.com/api/webhooks/$($Token)"
+            Body        = (ConvertTo-Json -Depth 6 -InputObject $payload)
+            Method      = 'POST'
             ContentType = 'application/json; charset=UTF-8'
+            ErrorAction = 'Stop'
         }
-        $Response = Invoke-RestMethod @Properties
-        $ret = $Response.result
+        $ret = Invoke-RestMethod @Properties
+        $ret | ConvertTo-Json
 
     }catch{
         Write-Warning $('ScriptName:', $($_.InvocationInfo.ScriptName), 'LineNumber:', $($_.InvocationInfo.ScriptLineNumber), 'Message:', $($_.Exception.Message) -Join ' ')
