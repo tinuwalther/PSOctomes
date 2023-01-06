@@ -78,7 +78,7 @@ process{
         Write-Verbose "FullMessage:"
         Write-Verbose "$($payload | Out-String)"
 
-        $Token = [System.Net.NetworkCredential]::new("", ($creds | Where-Object UserName -eq Discord).Password).Password #Read-Host -Prompt 'Enter the Token for Discord' -MaskInput
+        $Token = [System.Net.NetworkCredential]::new("", ($PSOctomes | Where-Object UserName -eq Discord).Password).Password #Read-Host -Prompt 'Enter the Token for Discord' -MaskInput
         $Properties = @{
             Uri         = "$($ApiUri)/$($Token)" #"https://discord.com/api/webhooks/$($Token)"
             Body        = (ConvertTo-Json -Depth 6 -InputObject $payload)

@@ -16,6 +16,40 @@ param (
     [String] $Message
 )
 
+#region functions
+function Get-MWASecretsFromVault{
+    [CmdletBinding()]
+    param(
+        [Parameter(Mandatory=$true)]
+        [String]$Vault
+    )
+
+    if(-not(Test-SecretVault -Name $Vault)){
+        Unlock-SecretVault -Name $Vault
+    }
+    
+    $SecretInfo = Get-SecretInfo -Vault $Vault -WarningAction SilentlyContinue
+    $ret = $SecretInfo | ForEach-Object {
+        $Tags = foreach($item in $_.Metadata.keys){
+            if($item -match 'Tags'){
+                $($_.Metadata[$item])
+            }
+        }
+        $Accessed = foreach($item in $_.Metadata.keys){
+            if($item -match 'Accessed'){
+                $($_.Metadata[$item])
+            }
+        }
+        [PSCustomObject]@{
+            Name     = $_.Name
+            Tag      = $Tags
+            Accessed = $Accessed
+        }
+    }
+    return $ret
+}
+#endregion
+
 #region Variables
 if([String]::IsNullOrEmpty($Message)){
 $Message = @"
@@ -27,6 +61,13 @@ https://github.com/tinuwalther/PSOctomes
 "@
 }
 
+<#
+$SecretVault = 'PrivatKdbx'
+$AllSecrets  = Get-MWASecretsFromVault -Vault $SecretVault
+$Secret = Get-Secret -Vault $SecretVault -Name $selected -ErrorAction Stop
+[System.Net.NetworkCredential]::new($Name, $Secret.Password).Password | Set-Clipboard
+#>
+
 <# 
 $cred = 'Discord','Telegram','Mastodon', 'TwitterApiKey', 'TwitterAccessToken' | ForEach-Object {
     Get-Credential -Message "Enter the Token for $_" -UserName $_
@@ -36,7 +77,7 @@ $cred | Export-Clixml
 
 try{
     $Clixml = Import-Clixml
-    if([string]::IsNullOrEmpty($Creds)){
+    if([string]::IsNullOrEmpty($Clixml)){
         Write-Warning "Credential-file not found!"
         break
     }

@@ -26,7 +26,6 @@ param (
     [ValidateNotNullOrEmpty()]
     [string] $Message,
 
-
     [Parameter(Mandatory=$true)]
     [Object] $PSOctomes
 )
