@@ -1,6 +1,6 @@
 [CmdletBinding()]
     param(
-        [Parameter(Mandatory=$true)]
+        [Parameter(Mandatory=$false)]
         [String] $ApiUri,
 
         [Parameter(Mandatory=$false)]
@@ -45,7 +45,7 @@ process{
             # New section with no embed object
             $EmbededSection = @{
                 'title'       = $SectionTitle
-                'description' = $SectionDescription
+                'description' = "@here: " + $SectionDescription
                 'color'       = $SectionColor
             }
         }else{
@@ -60,7 +60,7 @@ process{
             # New section as embed object
             $EmbededSection = @{
                 'title'       = $SectionTitle
-                'description' = $SectionDescription
+                'description' = "@here: " + $SectionDescription
                 'color'       = $SectionColor
                 "fields"      = @($EmbededFacts)
             }
@@ -78,7 +78,9 @@ process{
         Write-Verbose "FullMessage:"
         Write-Verbose "$($payload | Out-String)"
 
-        $Token = [System.Net.NetworkCredential]::new("", ($PSOctomes | Where-Object UserName -eq Discord).Password).Password #Read-Host -Prompt 'Enter the Token for Discord' -MaskInput
+        #$Token = [System.Net.NetworkCredential]::new("", ($PSOctomes | Where-Object UserName -eq Discord).Password).Password #Read-Host -Prompt 'Enter the Token for Discord' -MaskInput
+        $Token  = $PSOctomes | Where-Object User -eq DiscordPSBot | Select-Object -ExpandProperty Token
+        $ApiUri = $PSOctomes | Where-Object User -eq DiscordPSBot | Select-Object -ExpandProperty ApiUri
         $Properties = @{
             Uri         = "$($ApiUri)/$($Token)" #"https://discord.com/api/webhooks/$($Token)"
             Body        = (ConvertTo-Json -Depth 6 -InputObject $payload)

@@ -40,14 +40,55 @@ function Get-MWASecretsFromVault{
                 $($_.Metadata[$item])
             }
         }
+        $ApiUri = foreach($item in $_.Metadata.keys){
+            if($item -match 'URL'){
+                $($_.Metadata[$item])
+            }
+        }
         [PSCustomObject]@{
             Name     = $_.Name
+            ApiUri   = $ApiUri
             Tag      = $Tags
             Accessed = $Accessed
         }
     }
     return $ret
 }
+#endregion
+
+#region Secret
+$SecretVault  = 'PSOctomes'
+$AllSecrets   = Get-MWASecretsFromVault -Vault $SecretVault
+$SecredObject = foreach($item in $AllSecrets){
+    try{
+        $Secret = Get-Secret -Vault $SecretVault -Name $item.Name -ErrorAction Stop
+        [PSCustomObject]@{
+            Name   = $item.Name
+            User   = $Secret.UserName
+            ApiUri = $item.ApiUri
+            Token = [System.Net.NetworkCredential]::new($Secret.UserName, $Secret.Password).Password
+        }
+    }catch{
+        $Error.Clear()
+    }
+}
+
+<# 
+$cred = 'Discord','Telegram','Mastodon', 'TwitterApiKey', 'TwitterAccessToken' | ForEach-Object {
+    Get-Credential -Message "Enter the Token for $_" -UserName $_
+}
+$cred | Export-Clixml
+try{
+    $Clixml = Import-Clixml
+    if([string]::IsNullOrEmpty($Clixml)){
+        Write-Warning "Credential-file not found!"
+        break
+    }
+}catch{
+    Write-Warning $($_.Exception.Message)
+    break
+}
+#>
 #endregion
 
 #region Variables
@@ -60,41 +101,16 @@ I send this message to multiple messenger with #PowerShell.
 https://github.com/tinuwalther/PSOctomes
 "@
 }
-
-<#
-$SecretVault = 'PrivatKdbx'
-$AllSecrets  = Get-MWASecretsFromVault -Vault $SecretVault
-$Secret = Get-Secret -Vault $SecretVault -Name $selected -ErrorAction Stop
-[System.Net.NetworkCredential]::new($Name, $Secret.Password).Password | Set-Clipboard
-#>
-
-<# 
-$cred = 'Discord','Telegram','Mastodon', 'TwitterApiKey', 'TwitterAccessToken' | ForEach-Object {
-    Get-Credential -Message "Enter the Token for $_" -UserName $_
-}
-$cred | Export-Clixml
-#>
-
-try{
-    $Clixml = Import-Clixml
-    if([string]::IsNullOrEmpty($Clixml)){
-        Write-Warning "Credential-file not found!"
-        break
-    }
-}catch{
-    Write-Warning $($_.Exception.Message)
-    break
-}
 #endregion
-
+    
 #region Discord
 if($SendToDiscord){
     $Properties = @{
-        ApiUri             = "https://discord.com/api/webhooks"
+        #ApiUri             = "https://discord.com/api/webhooks"
         SectionDescription = $Message
         AuthorName         = 'tinu'
         AuthorAvatar       = 'https://it.martin-walther.ch/wp-content/uploads/Bearded.jpg'
-        PSOctomes          = $Clixml
+        PSOctomes          = $SecredObject
     }
     .\Bin\New-DiscordMessage.ps1 @Properties -Verbose
 }
@@ -103,11 +119,11 @@ if($SendToDiscord){
 #region Telegram
 if($SendToTelegram){
     $Properties = @{
-        ApiUri    = "https://api.telegram.org/bot"
+        #ApiUri    = "https://api.telegram.org/bot"
         Message   = $Message
-        ChatId    = 2043926767
+        #ChatId    = 2043926767
         Html      = $true
-        PSOctomes = $Clixml
+        PSOctomes = $SecredObject
     }
     .\Bin\New-TelegramMessage.ps1 @Properties -Verbose
 }
@@ -115,11 +131,11 @@ if($SendToTelegram){
 
 #region Mastodon
 if($SendToMastodon){
-    $MastodonInstance = 'techhub.social'
+    #$MastodonInstance = 'techhub.social'
     $Properties = @{
-        ApiUri    = "https://$($MastodonInstance)/api/v1/statuses"
+        #ApiUri    = "https://$($MastodonInstance)/api/v1/statuses"
         Message   = $Message
-        PSOctomes = $Clixml
+        PSOctomes = $SecredObject
     }
     .\Bin\New-MastodonMessage.ps1 @Properties -Verbose
 }
@@ -128,9 +144,9 @@ if($SendToMastodon){
 #region Twitter
 if($SendToTwitter){
     $Properties = @{
-        ApiUri    = "https://api.twitter.com/2/tweets"
+        #ApiUri    = "https://api.twitter.com/2/tweets"
         Message   = $Message
-        PSOctomes = $Clixml
+        PSOctomes = $SecredObject
     }
     .\Bin\New-TwitterMessage.ps1 @Properties -Verbose
 }

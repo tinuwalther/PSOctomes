@@ -1,6 +1,6 @@
 [CmdletBinding()]
 param (
-    [Parameter(Mandatory=$true)]
+    [Parameter(Mandatory=$false)]
     [String] $ApiUri,
 
     [Parameter(Mandatory=$false)]
@@ -9,7 +9,7 @@ param (
     [Parameter(Mandatory=$true)]
     [String] $Message,
 
-    [Parameter(Mandatory=$true)]
+    [Parameter(Mandatory=$false)]
     [Int] $ChatID,
 
     [Parameter(Mandatory=$true)]
@@ -35,6 +35,7 @@ process {
             $ParseMode = 'MarkdownV2'
         }
 
+        $ChatID  = $PSOctomes | Where-Object User -eq TelegramChatId | Select-Object -ExpandProperty Token
         $payload = @{
             "chat_id"                   = $ChatID
             "text"                      = $Message
@@ -45,7 +46,9 @@ process {
         Write-Verbose "Payload:"
         Write-Verbose "$($payload | Out-String)"
     
-        $Token = [System.Net.NetworkCredential]::new("", ($creds | Where-Object UserName -eq Telegram).Password).Password #Read-Host -Prompt 'Enter the Token for Telegram' -MaskInput
+        #$Token = [System.Net.NetworkCredential]::new("", ($creds | Where-Object UserName -eq Telegram).Password).Password #Read-Host -Prompt 'Enter the Token for Telegram' -MaskInput
+        $Token  = $PSOctomes | Where-Object User -eq TelegramToken | Select-Object -ExpandProperty Token
+        $ApiUri = $PSOctomes | Where-Object User -eq TelegramToken | Select-Object -ExpandProperty ApiUri
         $Properties = @{
             Uri         = "$($ApiUri)$($Token)/sendMessage" #"https://api.telegram.org/bot$($Token)/sendMessage"
             Body        = (ConvertTo-Json -Depth 6 -InputObject $payload)

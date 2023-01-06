@@ -34,8 +34,10 @@ process {
     try{
 
         #region Authentication
-        $oauth_consumer_key     = [System.Net.NetworkCredential]::new("", ($PSOctomes | Where-Object UserName -eq TwitterApiKey).Password).Password      #API Key
-        $oauth_token            = [System.Net.NetworkCredential]::new("", ($PSOctomes | Where-Object UserName -eq TwitterAccessToken).Password).Password #Access Token
+        # $oauth_consumer_key     = [System.Net.NetworkCredential]::new("", ($PSOctomes | Where-Object UserName -eq TwitterApiKey).Password).Password      #API Key
+        # $oauth_token            = [System.Net.NetworkCredential]::new("", ($PSOctomes | Where-Object UserName -eq TwitterAccessToken).Password).Password #Access Token
+        $oauth_consumer_key     = $PSOctomes | Where-Object User -eq TwitterApiKey      | Select-Object -ExpandProperty Token #API Key
+        $oauth_token            = $PSOctomes | Where-Object User -eq TwitterAccessToken | Select-Object -ExpandProperty Token #Access Token
         $oauth_signature_method = 'HMAC-SHA1'
         $oauth_timestamp        = '1672668693'
         $oauth_nonce            = 'hzECGas6TWf'

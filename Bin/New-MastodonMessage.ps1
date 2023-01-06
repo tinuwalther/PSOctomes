@@ -51,7 +51,9 @@ process {
         Write-Verbose "Payload:"
         Write-Verbose "$($payload | Out-String)"
 
-        $Token = [System.Net.NetworkCredential]::new("", ($PSOctomes | Where-Object UserName -eq Mastodon).Password).Password #Read-Host -Prompt 'Enter the Token for Mastodon' -MaskInput
+        #$Token = [System.Net.NetworkCredential]::new("", ($PSOctomes | Where-Object UserName -eq Mastodon).Password).Password #Read-Host -Prompt 'Enter the Token for Mastodon' -MaskInput
+        $Token  = $PSOctomes | Where-Object User -eq MastodonBot | Select-Object -ExpandProperty Token
+        $ApiUri = $PSOctomes | Where-Object User -eq MastodonBot | Select-Object -ExpandProperty ApiUri
         $Properties = @{
             Uri         = "$($ApiUri)?access_token=$($Token)"
             Method      = 'POST'
