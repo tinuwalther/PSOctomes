@@ -7,13 +7,15 @@
 
 [CmdletBinding()]
 param (
-    [Parameter(Mandatory=$true)]
+    [Parameter(Mandatory=$false)]
     [String] $ApiUri,
     
     [Parameter(Mandatory=$true)]
+    [ValidateNotNullOrEmpty()]
     [String] $Message,
 
     [Parameter(Mandatory=$true)]
+    [ValidateNotNullOrEmpty()]
     [Object] $PSOctomes
 )
 
@@ -36,13 +38,23 @@ process {
         #region Authentication
         # $oauth_consumer_key     = [System.Net.NetworkCredential]::new("", ($PSOctomes | Where-Object UserName -eq TwitterApiKey).Password).Password      #API Key
         # $oauth_token            = [System.Net.NetworkCredential]::new("", ($PSOctomes | Where-Object UserName -eq TwitterAccessToken).Password).Password #Access Token
-        $oauth_consumer_key     = $PSOctomes | Where-Object User -eq TwitterApiKey      | Select-Object -ExpandProperty Token #API Key
+        $ApiUri                 = $PSOctomes | Where-Object User -eq TwitterAccessToken | Select-Object -ExpandProperty ApiUri
+        $oauth_consumer_key     = $PSOctomes | Where-Object User -eq TwitterApiKey      | Select-Object -ExpandProperty Token #API / Consumer Key
         $oauth_token            = $PSOctomes | Where-Object User -eq TwitterAccessToken | Select-Object -ExpandProperty Token #Access Token
-        $oauth_signature_method = 'HMAC-SHA1'
-        $oauth_timestamp        = '1672668693'
-        $oauth_nonce            = 'hzECGas6TWf'
+        
+        # How to create a Signature?
+        # Consumer Key
+        # Consumer Secret
+        # Access Token
+        # Token Secret
+        # Signature Method
+        # Version
+        # https://developer.twitter.com/en/docs/authentication/oauth-1-0a/creating-a-signature
         $oauth_version          = '1.0'
-        $oauth_signature        = 'byeaFhAem8kcL8ZESb68oIyHNVI%3D'
+        $oauth_signature_method = 'HMAC-SHA1'
+        $oauth_timestamp        = ''
+        $oauth_nonce            = ''
+        $oauth_signature        = ''
         #endregion
 
         #region Authorization
@@ -77,6 +89,7 @@ process {
 
     }catch{
         Write-Warning $('ScriptName:', $($_.InvocationInfo.ScriptName), 'LineNumber:', $($_.InvocationInfo.ScriptLineNumber), 'Message:', $($_.Exception.Message) -Join ' ')
+        $ret = $($_.Exception.Message)
         $Error.Clear()
     }
 }

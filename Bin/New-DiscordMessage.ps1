@@ -7,6 +7,7 @@
         [String] $SectionTitle,
 
         [Parameter(Mandatory=$true)]
+        [ValidateNotNullOrEmpty()]
         [String] $SectionDescription,
 
         [Parameter(Mandatory=$false)]
@@ -24,6 +25,7 @@
         [Parameter(Mandatory=$false)]
         [String] $AuthorAvatar = 'http://img1.wikia.nocookie.net/__cb20111027212138/pichipichipitchadventures/es/images/thumb/f/fd/Captain-Hook-Wallpaper-disney-villains-976702_1024_768.png/456px-Captain-Hook-Wallpaper-disney-villains-976702_1024_768.png',
 
+        [ValidateNotNullOrEmpty()]
         [Parameter(Mandatory=$true)]
         [Object] $PSOctomes
 )
@@ -93,6 +95,7 @@ process{
 
     }catch{
         Write-Warning $('ScriptName:', $($_.InvocationInfo.ScriptName), 'LineNumber:', $($_.InvocationInfo.ScriptLineNumber), 'Message:', $($_.Exception.Message) -Join ' ')
+        $ret = $($_.Exception.Message)
         $Error.Clear()
     }
 }

@@ -7,12 +7,14 @@ param (
     [Switch]$Html,
 
     [Parameter(Mandatory=$true)]
+    [ValidateNotNullOrEmpty()]
     [String] $Message,
 
     [Parameter(Mandatory=$false)]
     [Int] $ChatID,
 
     [Parameter(Mandatory=$true)]
+    [ValidateNotNullOrEmpty()]
     [Object] $PSOctomes
 )
 
@@ -62,6 +64,7 @@ process {
 
     }catch{
         Write-Warning $('ScriptName:', $($_.InvocationInfo.ScriptName), 'LineNumber:', $($_.InvocationInfo.ScriptLineNumber), 'Message:', $($_.Exception.Message) -Join ' ')
+        $ret = $($_.Exception.Message)
         $Error.Clear()
     }
 }

@@ -21,6 +21,7 @@ cd ./PSOctomes
 ````
 
 Create your credential-file as KeePass-Database with the following entries:
+
 - DiscordPSBot, URL, Token as Password
 - MastodonBot, URL, Token as Password
 - TelegramToken, URL, Token as Password
@@ -38,8 +39,8 @@ Register SecretVault:
 
 ````powershell
 Register-SecretVault -Name "PSOctomes" -ModuleName "SecretManagement.Keepass" -VaultParameters @{
-	Path = "$($env:USERPROFILE)\Do*ument*\PSOctomes.kdbx"
-	UseMasterPassword = $true
+    Path = "$($env:USERPROFILE)\Do*ument*\PSOctomes.kdbx"
+    UseMasterPassword = $true
 }
 ````
 
