@@ -49,7 +49,7 @@ Register-SecretVault -Name "PSOctomes" -ModuleName "SecretManagement.Keepass" -V
 Test the access to the KeePass Vault:
 
 ````powershell
-Get-SecretInfo -Vault PSOctomes -Name DiscordPSBot | Select-Object -ExpandProperty Metadata
+Get-SecretInfo -Vault PSOctomes -Name Discord_Token | Select-Object -ExpandProperty Metadata
 ````
 
 and execute the script Send-OctoMessage.ps1
