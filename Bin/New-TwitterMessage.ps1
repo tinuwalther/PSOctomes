@@ -1,13 +1,16 @@
+#Requires -Modules BluebirdPS
+
 <#
     https://powershellisfun.com/2022/08/01/create-a-tweet-on-twitter-using-powershell/
     got to the developer portal
     create a new app
     save your keys
+    https://github.com/thedavecarroll/BluebirdPS
 #>
 
 [CmdletBinding()]
 param (
-    [Parameter(Mandatory=$true)]
+    [Parameter(Mandatory=$false)]
     [String] $ApiUri,
     
     [Parameter(Mandatory=$true)]
@@ -33,46 +36,22 @@ process {
 
     try{
 
-        #region Authentication
-        # $oauth_consumer_key     = [System.Net.NetworkCredential]::new("", ($PSOctomes | Where-Object UserName -eq TwitterApiKey).Password).Password      #API Key
-        # $oauth_token            = [System.Net.NetworkCredential]::new("", ($PSOctomes | Where-Object UserName -eq TwitterAccessToken).Password).Password #Access Token
-        $oauth_consumer_key     = $PSOctomes | Where-Object User -eq TwitterApiKey      | Select-Object -ExpandProperty Token #API Key
-        $oauth_token            = $PSOctomes | Where-Object User -eq TwitterAccessToken | Select-Object -ExpandProperty Token #Access Token
-        $oauth_signature_method = 'HMAC-SHA1'
-        $oauth_timestamp        = '1672668693'
-        $oauth_nonce            = 'hzECGas6TWf'
-        $oauth_version          = '1.0'
-        $oauth_signature        = 'byeaFhAem8kcL8ZESb68oIyHNVI%3D'
-        #endregion
+        $ApiKey            = "$($PSOctomes | Where-Object User -eq Twitter_ApiKey            | Select-Object -ExpandProperty Token)"
+        $ApiSecret         = "$($PSOctomes | Where-Object User -eq Twitter_ApiSecret         | Select-Object -ExpandProperty Token)"
+        $AccessToken       = "$($PSOctomes | Where-Object User -eq Twitter_AccessToken       | Select-Object -ExpandProperty Token)"
+        $AccessTokenSecret = "$($PSOctomes | Where-Object User -eq Twitter_AccessTokenSecret | Select-Object -ExpandProperty Token)"
 
-        #region Authorization
-        $oauth_authorization    = 'OAuth '
-        $oauth_authorization    += "oauth_consumer_key = $oauth_consumer_key, "
-        $oauth_authorization    += "oauth_token = $oauth_token, "
-        $oauth_authorization    += "oauth_signature_method = $oauth_signature_method, "
-        $oauth_authorization    += "oauth_timestamp = $oauth_timestamp, "
-        $oauth_authorization    += "oauth_nonce = $oauth_nonce, "
-        $oauth_authorization    += "oauth_version = $oauth_version, "
-        $oauth_authorization    += "oauth_signature = $oauth_signature"
-        #endregion
-
-        $headers = @{
-            Authorization = $oauth_authorization
-        }
-
-        $payload = @{
-            text = $Message
+        if(Test-TwitterAuthentication){
+            Write-Verbose "TwitterAuthentication: $true"
+        }else{
+            Write-Warning "Could not authenticate to Twitter, check the authentication values:"
+            Write-Host $(Show-TwitterAuthentication -Confirm:$false | Out-String)
         }
 
         $Properties = @{
-            Uri         = $ApiUri
-            Headers     = $headers
-            Body        = (ConvertTo-Json -Depth 6 -InputObject $payload)
-            Method      = 'POST'
-            ContentType = 'application/json; charset=UTF-8'
-            ErrorAction = 'Stop'
+            TweetText = $Message
         }
-        $ret = Invoke-RestMethod @Properties
+        $ret = Publish-Tweet @Properties
         $ret | ConvertTo-Json
 
     }catch{
@@ -92,33 +71,81 @@ end {
 }
 
 <#
-$culture = New-Object  -TypeName System.Globalization.CultureInfo -ArgumentList ('en-US')
-$oauth_nonce = [System.Convert]::ToBase64String([System.Text.Encoding]::ASCII.GetBytes([System.DateTime]::Now.Ticks.ToString()))  
-$ts = [System.DateTime]::UtcNow - [System.DateTime]::ParseExact('01/01/1970', 'dd/MM/yyyy', $culture).ToUniversalTime()  
-$oauth_timestamp = [System.Convert]::ToInt64($ts.TotalSeconds).ToString()  
+#Requires -Modules BluebirdPS
 
-$signature = 'POST&'  
-$signature += [System.Uri]::EscapeDataString('https://api.twitter.com/1.1/statuses/update.json') + '&'  
-$signature += [System.Uri]::EscapeDataString('oauth_consumer_key=' + $oauth_consumer_key + '&')  
-$signature += [System.Uri]::EscapeDataString('oauth_nonce=' + $oauth_nonce + '&')   
-$signature += [System.Uri]::EscapeDataString('oauth_signature_method=HMAC-SHA1&')  
-$signature += [System.Uri]::EscapeDataString('oauth_timestamp=' + $oauth_timestamp + '&')  
-$signature += [System.Uri]::EscapeDataString('oauth_token=' + $oauth_token + '&')  
-$signature += [System.Uri]::EscapeDataString('oauth_version=1.0a&')  
-$signature += [System.Uri]::EscapeDataString('status=' + $status)  
+https://docs.bluebirdps.dev/en/latest/about_BluebirdPS/
 
-$signature_key = [System.Uri]::EscapeDataString($oauth_consumer_secret) + '&' + [System.Uri]::EscapeDataString($oauth_token_secret)  
+$BluebirdPSLastResponse
+Get-BluebirdPSHistory -Last 5
 
-$hmacsha1 = New-Object  -TypeName System.Security.Cryptography.HMACSHA1  
-$hmacsha1.Key = [System.Text.Encoding]::ASCII.GetBytes($signature_key)  
-$oauth_signature = [System.Convert]::ToBase64String($hmacsha1.ComputeHash([System.Text.Encoding]::ASCII.GetBytes($signature)))  
+Set-TwitterAuthentication
+Show-TwitterAuthentication
+Test-TwitterAuthentication
+#>
 
-$oauth_authorization = 'OAuth '  
-$oauth_authorization += 'oauth_consumer_key="' + [System.Uri]::EscapeDataString($oauth_consumer_key) + '",'  
-$oauth_authorization += 'oauth_nonce="' + [System.Uri]::EscapeDataString($oauth_nonce) + '",'  
-$oauth_authorization += 'oauth_signature="' + [System.Uri]::EscapeDataString($oauth_signature) + '",'  
-$oauth_authorization += 'oauth_signature_method="HMAC-SHA1",'  
-$oauth_authorization += 'oauth_timestamp="' + [System.Uri]::EscapeDataString($oauth_timestamp) + '",'  
-$oauth_authorization += 'oauth_token="' + [System.Uri]::EscapeDataString($oauth_token) + '",'  
-$oauth_authorization += 'oauth_version="1.0a"'  
+<#
+        #region Authentication
+        $ApiUri                 = $PSOctomes | Where-Object User -eq oauth_token        | Select-Object -ExpandProperty ApiUri #API Key
+        $signature_uri          = $PSOctomes | Where-Object User -eq oauth_consumer_key | Select-Object -ExpandProperty ApiUri #Access Token
+        $oauth_consumer_key     = $PSOctomes | Where-Object User -eq oauth_consumer_key | Select-Object -ExpandProperty Token #API Key
+        $oauth_token            = $PSOctomes | Where-Object User -eq oauth_token        | Select-Object -ExpandProperty Token #Access Token
+
+        $oauth_signature_method = 'HMAC-SHA1'
+        $oauth_timestamp        = [System.Math]::Floor(([System.DateTime]::UtcNow - [System.DateTime]::Parse("1/1/1970")).TotalSeconds)
+        $oauth_nonce            =  [System.Convert]::ToBase64String([System.Text.Encoding]::ASCII.GetBytes((Get-Random -Minimum 100000 -Maximum 999999).ToString()))
+        $oauth_version          = '1.0'
+        
+            #region signautre
+            $signature = 'POST&'  
+            $signature += [System.Uri]::EscapeDataString($signature_uri) + '&'  
+            $signature += [System.Uri]::EscapeDataString('oauth_consumer_key=' + $oauth_consumer_key + '&')  
+            $signature += [System.Uri]::EscapeDataString('oauth_nonce=' + $oauth_nonce + '&')   
+            $signature += [System.Uri]::EscapeDataString('oauth_signature_method=HMAC-SHA1&')  
+            $signature += [System.Uri]::EscapeDataString('oauth_timestamp=' + $oauth_timestamp + '&')  
+            $signature += [System.Uri]::EscapeDataString('oauth_token=' + $oauth_token + '&')  
+            $signature += [System.Uri]::EscapeDataString('oauth_version=1.0a&')  
+            $signature += [System.Uri]::EscapeDataString('status=' + $status)  
+
+            $signature_key = [System.Uri]::EscapeDataString("oauth_consumer_key=" + $oauth_consumer_key) + '&' + [System.Uri]::EscapeDataString("oauth_token =" + $oauth_token)  
+
+            $hmacsha1 = New-Object  -TypeName System.Security.Cryptography.HMACSHA1  
+            $hmacsha1.Key = [System.Text.Encoding]::ASCII.GetBytes($signature_key)  
+            $oauth_signature =  [System.Convert]::ToBase64String($hmacsha1.ComputeHash([System.Text.Encoding]::ASCII.GetBytes($signature)))  
+            #endregion signature
+
+        #endregion
+
+        #region Authorization
+        $oauth_authorization = 'OAuth '
+        $oauth_authorization += "oauth_consumer_key=`"$($oauth_consumer_key)`","
+        $oauth_authorization += "oauth_token=`"$($oauth_consumer_key)`","
+        $oauth_authorization += "oauth_signature_method=`"$($oauth_signature_method)`","
+        $oauth_authorization += "oauth_timestamp=`"$($oauth_timestamp)`","
+        $oauth_authorization += "oauth_nonce=`"$($oauth_nonce)`","
+        $oauth_authorization += "oauth_version=`"$($oauth_version)`","
+        $oauth_authorization += "oauth_signature=`"$($oauth_signature)`""
+        #endregion
+
+        $headers = @{
+            Authorization = $oauth_authorization
+        }
+
+        # $headers = New-Object "System.Collections.Generic.Dictionary[[String],[String]]"
+        # $headers.Add("Authorization", "OAuth oauth_consumer_key=`"$($oauth_consumer_key)`",oauth_token=`"$($oauth_consumer_key)`",oauth_signature_method=`"$($oauth_signature_method)`",oauth_timestamp=`"$($oauth_timestamp)`",oauth_nonce=`"$($oauth_nonce)`",oauth_version=`"$($oauth_version)`",oauth_signature=`"$($oauth_signature)`"")
+        # $headers.Add("Content-Type", "application/json")
+
+        $payload = @{
+            text = $Message
+        }
+
+        $Properties = @{
+            Uri         = $ApiUri
+            Headers     = $headers
+            Body        = (ConvertTo-Json -Depth 6 -InputObject $payload)
+            Method      = 'POST'
+            ContentType = 'application/json; charset=UTF-8'
+            ErrorAction = 'Stop'
+        }
+        $ret = Invoke-RestMethod @Properties
+        $ret | ConvertTo-Json
 #>

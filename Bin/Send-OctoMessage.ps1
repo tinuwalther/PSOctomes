@@ -59,7 +59,7 @@ function Get-MWASecretsFromVault{
 #region Secret
 $SecretVault  = 'PSOctomes'
 $AllSecrets   = Get-MWASecretsFromVault -Vault $SecretVault
-$SecredObject = foreach($item in $AllSecrets){
+$SecretObject = foreach($item in $AllSecrets){
     try{
         $Secret = Get-Secret -Vault $SecretVault -Name $item.Name -ErrorAction Stop
         [PSCustomObject]@{
@@ -96,7 +96,7 @@ if([String]::IsNullOrEmpty($Message)){
 $Message = @"
 Hi
 
-I send this message to multiple messenger with #PowerShell.
+I send this message to multiple messenger with #PowerShell and #PSOctomes.
 
 https://github.com/tinuwalther/PSOctomes
 "@
@@ -110,7 +110,7 @@ if($SendToDiscord){
         SectionDescription = $Message
         AuthorName         = 'tinu'
         AuthorAvatar       = 'https://it.martin-walther.ch/wp-content/uploads/Bearded.jpg'
-        PSOctomes          = $SecredObject
+        PSOctomes          = $SecretObject
     }
     .\Bin\New-DiscordMessage.ps1 @Properties -Verbose
 }
@@ -123,7 +123,7 @@ if($SendToTelegram){
         Message   = $Message
         #ChatId    = 2043926767
         Html      = $true
-        PSOctomes = $SecredObject
+        PSOctomes = $SecretObject
     }
     .\Bin\New-TelegramMessage.ps1 @Properties -Verbose
 }
@@ -135,7 +135,7 @@ if($SendToMastodon){
     $Properties = @{
         #ApiUri    = "https://$($MastodonInstance)/api/v1/statuses"
         Message   = $Message
-        PSOctomes = $SecredObject
+        PSOctomes = $SecretObject
     }
     .\Bin\New-MastodonMessage.ps1 @Properties -Verbose
 }
@@ -146,7 +146,7 @@ if($SendToTwitter){
     $Properties = @{
         #ApiUri    = "https://api.twitter.com/2/tweets"
         Message   = $Message
-        PSOctomes = $SecredObject
+        PSOctomes = $SecretObject
     }
     .\Bin\New-TwitterMessage.ps1 @Properties -Verbose
 }
