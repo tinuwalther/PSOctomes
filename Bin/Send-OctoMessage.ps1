@@ -96,7 +96,7 @@ if([String]::IsNullOrEmpty($Message)){
 $Message = @"
 Hi
 
-I send this message to multiple messenger with #PowerShell and #PSOctomes.
+Finally, I send this message to multiple messenger with #PowerShell and #PSOctomes.
 
 https://github.com/tinuwalther/PSOctomes
 "@
@@ -112,7 +112,7 @@ if($SendToDiscord){
         AuthorAvatar       = 'https://it.martin-walther.ch/wp-content/uploads/Bearded.jpg'
         PSOctomes          = $SecretObject
     }
-    .\Bin\New-DiscordMessage.ps1 @Properties -Verbose
+    .\Bin\New-DiscordMessage.ps1 @Properties #-Verbose
 }
 #endregion
 
@@ -125,7 +125,7 @@ if($SendToTelegram){
         Html      = $true
         PSOctomes = $SecretObject
     }
-    .\Bin\New-TelegramMessage.ps1 @Properties -Verbose
+    .\Bin\New-TelegramMessage.ps1 @Properties #-Verbose
 }
 #endregion
 
@@ -137,7 +137,7 @@ if($SendToMastodon){
         Message   = $Message
         PSOctomes = $SecretObject
     }
-    .\Bin\New-MastodonMessage.ps1 @Properties -Verbose
+    .\Bin\New-MastodonMessage.ps1 @Properties #-Verbose
 }
 #endregion
 
@@ -148,7 +148,7 @@ if($SendToTwitter){
         Message   = $Message
         PSOctomes = $SecretObject
     }
-    .\Bin\New-TwitterMessage.ps1 @Properties -Verbose
+    .\Bin\New-TwitterMessage.ps1 @Properties #-Verbose
 }
 #endregion
 

@@ -52,8 +52,8 @@ process {
         Write-Verbose "$($payload | Out-String)"
 
         #$Token = [System.Net.NetworkCredential]::new("", ($PSOctomes | Where-Object UserName -eq Mastodon).Password).Password #Read-Host -Prompt 'Enter the Token for Mastodon' -MaskInput
-        $Token  = $PSOctomes | Where-Object User -eq MastodonBot | Select-Object -ExpandProperty Token
-        $ApiUri = $PSOctomes | Where-Object User -eq MastodonBot | Select-Object -ExpandProperty ApiUri
+        $Token  = $PSOctomes | Where-Object User -eq Mastodon_Token | Select-Object -ExpandProperty Token
+        $ApiUri = $PSOctomes | Where-Object User -eq Mastodon_Token | Select-Object -ExpandProperty ApiUri
         $Properties = @{
             Uri         = "$($ApiUri)?access_token=$($Token)"
             Method      = 'POST'
@@ -64,7 +64,9 @@ process {
             ErrorAction = 'Stop'
         }
         $ret = Invoke-RestMethod @Properties
-        $ret | ConvertTo-Json
+
+        Write-Host "$($function)"
+        $ret | Out-String
 
     }catch{
         Write-Warning $('ScriptName:', $($_.InvocationInfo.ScriptName), 'LineNumber:', $($_.InvocationInfo.ScriptLineNumber), 'Message:', $($_.Exception.Message) -Join ' ')

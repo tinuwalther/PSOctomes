@@ -81,8 +81,8 @@ process{
         Write-Verbose "$($payload | Out-String)"
 
         #$Token = [System.Net.NetworkCredential]::new("", ($PSOctomes | Where-Object UserName -eq Discord).Password).Password #Read-Host -Prompt 'Enter the Token for Discord' -MaskInput
-        $Token  = $PSOctomes | Where-Object User -eq DiscordPSBot | Select-Object -ExpandProperty Token
-        $ApiUri = $PSOctomes | Where-Object User -eq DiscordPSBot | Select-Object -ExpandProperty ApiUri
+        $Token  = $PSOctomes | Where-Object User -eq Discord_Token | Select-Object -ExpandProperty Token
+        $ApiUri = $PSOctomes | Where-Object User -eq Discord_Token | Select-Object -ExpandProperty ApiUri
         $Properties = @{
             Uri         = "$($ApiUri)/$($Token)" #"https://discord.com/api/webhooks/$($Token)"
             Body        = (ConvertTo-Json -Depth 6 -InputObject $payload)
@@ -91,7 +91,9 @@ process{
             ErrorAction = 'Stop'
         }
         $ret = Invoke-RestMethod @Properties
-        $ret | ConvertTo-Json
+
+        Write-Host "$($function)"
+        $ret | Out-String
 
     }catch{
         Write-Warning $('ScriptName:', $($_.InvocationInfo.ScriptName), 'LineNumber:', $($_.InvocationInfo.ScriptLineNumber), 'Message:', $($_.Exception.Message) -Join ' ')

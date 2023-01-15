@@ -37,7 +37,7 @@ process {
             $ParseMode = 'MarkdownV2'
         }
 
-        $ChatID  = $PSOctomes | Where-Object User -eq TelegramChatId | Select-Object -ExpandProperty Token
+        $ChatID  = $PSOctomes | Where-Object User -eq Telegram_ChatId | Select-Object -ExpandProperty Token
         $payload = @{
             "chat_id"                   = $ChatID
             "text"                      = $Message
@@ -49,8 +49,8 @@ process {
         Write-Verbose "$($payload | Out-String)"
     
         #$Token = [System.Net.NetworkCredential]::new("", ($creds | Where-Object UserName -eq Telegram).Password).Password #Read-Host -Prompt 'Enter the Token for Telegram' -MaskInput
-        $Token  = $PSOctomes | Where-Object User -eq TelegramToken | Select-Object -ExpandProperty Token
-        $ApiUri = $PSOctomes | Where-Object User -eq TelegramToken | Select-Object -ExpandProperty ApiUri
+        $Token  = $PSOctomes | Where-Object User -eq Telegram_Token | Select-Object -ExpandProperty Token
+        $ApiUri = $PSOctomes | Where-Object User -eq Telegram_Token | Select-Object -ExpandProperty ApiUri
         $Properties = @{
             Uri         = "$($ApiUri)$($Token)/sendMessage" #"https://api.telegram.org/bot$($Token)/sendMessage"
             Body        = (ConvertTo-Json -Depth 6 -InputObject $payload)
@@ -60,7 +60,9 @@ process {
         }
         #$ret = Invoke-RestMethod -Uri "$($WebhookUrl)?chat_id=$($ChatID)&text=$($Message)&parse_mode=$($ParseMode)"
         $ret = Invoke-RestMethod @Properties
-        $ret | ConvertTo-Json
+
+        Write-Host "$($function)"
+        $ret | Out-String
 
     }catch{
         Write-Warning $('ScriptName:', $($_.InvocationInfo.ScriptName), 'LineNumber:', $($_.InvocationInfo.ScriptLineNumber), 'Message:', $($_.Exception.Message) -Join ' ')

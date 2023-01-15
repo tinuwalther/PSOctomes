@@ -11,15 +11,12 @@
 [CmdletBinding()]
 param (
     [Parameter(Mandatory=$false)]
-    [Parameter(Mandatory=$false)]
     [String] $ApiUri,
     
     [Parameter(Mandatory=$true)]
-    [ValidateNotNullOrEmpty()]
     [String] $Message,
 
     [Parameter(Mandatory=$true)]
-    [ValidateNotNullOrEmpty()]
     [Object] $PSOctomes
 )
 
@@ -55,7 +52,9 @@ process {
             TweetText = $Message
         }
         $ret = Publish-Tweet @Properties
-        $ret | ConvertTo-Json
+
+        Write-Host "$($function)"
+        $ret | Out-String
 
     }catch{
         Write-Warning $('ScriptName:', $($_.InvocationInfo.ScriptName), 'LineNumber:', $($_.InvocationInfo.ScriptLineNumber), 'Message:', $($_.Exception.Message) -Join ' ')
@@ -94,10 +93,28 @@ Test-TwitterAuthentication
         $oauth_token            = $PSOctomes | Where-Object User -eq oauth_token        | Select-Object -ExpandProperty Token #Access Token
 
         $oauth_signature_method = 'HMAC-SHA1'
-        $oauth_timestamp        = '1672668693'
-        $oauth_nonce            = 'hzECGas6TWf'
+        $oauth_timestamp        = [System.Math]::Floor(([System.DateTime]::UtcNow - [System.DateTime]::Parse("1/1/1970")).TotalSeconds)
+        $oauth_nonce            =  [System.Convert]::ToBase64String([System.Text.Encoding]::ASCII.GetBytes((Get-Random -Minimum 100000 -Maximum 999999).ToString()))
         $oauth_version          = '1.0'
-        $oauth_signature        = 'byeaFhAem8kcL8ZESb68oIyHNVI%3D'
+        
+            #region signautre
+            $signature = 'POST&'  
+            $signature += [System.Uri]::EscapeDataString($signature_uri) + '&'  
+            $signature += [System.Uri]::EscapeDataString('oauth_consumer_key=' + $oauth_consumer_key + '&')  
+            $signature += [System.Uri]::EscapeDataString('oauth_nonce=' + $oauth_nonce + '&')   
+            $signature += [System.Uri]::EscapeDataString('oauth_signature_method=HMAC-SHA1&')  
+            $signature += [System.Uri]::EscapeDataString('oauth_timestamp=' + $oauth_timestamp + '&')  
+            $signature += [System.Uri]::EscapeDataString('oauth_token=' + $oauth_token + '&')  
+            $signature += [System.Uri]::EscapeDataString('oauth_version=1.0a&')  
+            $signature += [System.Uri]::EscapeDataString('status=' + $status)  
+
+            $signature_key = [System.Uri]::EscapeDataString("oauth_consumer_key=" + $oauth_consumer_key) + '&' + [System.Uri]::EscapeDataString("oauth_token =" + $oauth_token)  
+
+            $hmacsha1 = New-Object  -TypeName System.Security.Cryptography.HMACSHA1  
+            $hmacsha1.Key = [System.Text.Encoding]::ASCII.GetBytes($signature_key)  
+            $oauth_signature =  [System.Convert]::ToBase64String($hmacsha1.ComputeHash([System.Text.Encoding]::ASCII.GetBytes($signature)))  
+            #endregion signature
+
         #endregion
 
         #region Authorization
@@ -133,51 +150,4 @@ Test-TwitterAuthentication
         }
         $ret = Invoke-RestMethod @Properties
         $ret | ConvertTo-Json
-
-    }catch{
-        Write-Warning $('ScriptName:', $($_.InvocationInfo.ScriptName), 'LineNumber:', $($_.InvocationInfo.ScriptLineNumber), 'Message:', $($_.Exception.Message) -Join ' ')
-        $Error.Clear()
-    }
-}
-
-end {
-    Write-Verbose $('[', (Get-Date -f 'yyyy-MM-dd HH:mm:ss.fff'), ']', '[ End     ]', $function -Join ' ')
-    $TimeSpan  = New-TimeSpan -Start $StartTime -End (Get-Date)
-    $Formatted = $TimeSpan | ForEach-Object {
-        '{1:0}h {2:0}m {3:0}s {4:000}ms' -f $_.Days, $_.Hours, $_.Minutes, $_.Seconds, $_.Milliseconds
-    }
-    Write-Verbose $('Finished in:', $Formatted -Join ' ')
-    return $ret
-}
-
-<#
-$culture = New-Object  -TypeName System.Globalization.CultureInfo -ArgumentList ('en-US')
-$oauth_nonce = [System.Convert]::ToBase64String([System.Text.Encoding]::ASCII.GetBytes([System.DateTime]::Now.Ticks.ToString()))  
-$ts = [System.DateTime]::UtcNow - [System.DateTime]::ParseExact('01/01/1970', 'dd/MM/yyyy', $culture).ToUniversalTime()  
-$oauth_timestamp = [System.Convert]::ToInt64($ts.TotalSeconds).ToString()  
-
-$signature = 'POST&'  
-$signature += [System.Uri]::EscapeDataString('https://api.twitter.com/1.1/statuses/update.json') + '&'  
-$signature += [System.Uri]::EscapeDataString('oauth_consumer_key=' + $oauth_consumer_key + '&')  
-$signature += [System.Uri]::EscapeDataString('oauth_nonce=' + $oauth_nonce + '&')   
-$signature += [System.Uri]::EscapeDataString('oauth_signature_method=HMAC-SHA1&')  
-$signature += [System.Uri]::EscapeDataString('oauth_timestamp=' + $oauth_timestamp + '&')  
-$signature += [System.Uri]::EscapeDataString('oauth_token=' + $oauth_token + '&')  
-$signature += [System.Uri]::EscapeDataString('oauth_version=1.0a&')  
-$signature += [System.Uri]::EscapeDataString('status=' + $status)  
-
-$signature_key = [System.Uri]::EscapeDataString($oauth_consumer_secret) + '&' + [System.Uri]::EscapeDataString($oauth_token_secret)  
-
-$hmacsha1 = New-Object  -TypeName System.Security.Cryptography.HMACSHA1  
-$hmacsha1.Key = [System.Text.Encoding]::ASCII.GetBytes($signature_key)  
-$oauth_signature = [System.Convert]::ToBase64String($hmacsha1.ComputeHash([System.Text.Encoding]::ASCII.GetBytes($signature)))  
-
-$oauth_authorization = 'OAuth '  
-$oauth_authorization += 'oauth_consumer_key="' + [System.Uri]::EscapeDataString($oauth_consumer_key) + '",'  
-$oauth_authorization += 'oauth_nonce="' + [System.Uri]::EscapeDataString($oauth_nonce) + '",'  
-$oauth_authorization += 'oauth_signature="' + [System.Uri]::EscapeDataString($oauth_signature) + '",'  
-$oauth_authorization += 'oauth_signature_method="HMAC-SHA1",'  
-$oauth_authorization += 'oauth_timestamp="' + [System.Uri]::EscapeDataString($oauth_timestamp) + '",'  
-$oauth_authorization += 'oauth_token="' + [System.Uri]::EscapeDataString($oauth_token) + '",'  
-$oauth_authorization += 'oauth_version="1.0a"'  
 #>

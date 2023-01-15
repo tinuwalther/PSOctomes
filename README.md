@@ -22,17 +22,19 @@ cd ./PSOctomes
 
 Create your credential-file as KeePass-Database with the following entries:
 
-- DiscordPSBot, URL, Token as Password
-- MastodonBot, URL, Token as Password
-- TelegramToken, URL, Token as Password
-- TelegramChatId, Id as Password
-- TwitterAccessToken, URL, Token as Password
-- TwitterApiKey, AccessKey as Password
+- Discord_Token, URL, Token as Password
+- Mastodon_Token, URL, Token as Password
+- Telegram_Token, URL, Token as Password
+- Telegram_ChatId, Id as Password
+- Twitter_ApiKey, Token as Password
+- Twitter_ApiSecret, Token as Password
+- Twitter_AccessToken, Token as Password
+- Twitter_AccessTokenSecret, Token as Password
 
 Install-Modules:
 
 ````powershell
-Install-Module Microsoft.PowerShell.SecretManagement, Microsoft.PowerShell.SecretStore, SecretManagement.KeePass -Verbose
+Install-Module Microsoft.PowerShell.SecretManagement, SecretManagement.KeePass -Verbose
 ````
 
 Register SecretVault:
@@ -56,7 +58,7 @@ and execute the script Send-OctoMessage.ps1
 $Message = @"
 Hi
 
-I send this message to multiple messenger with #PowerShell.
+I send this message to multiple messenger with #PowerShell and #PSOctomes.
 
 https://github.com/tinuwalther/PSOctomes
 "@
