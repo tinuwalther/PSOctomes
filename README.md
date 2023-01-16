@@ -4,12 +4,34 @@ PowerShell Script to send messages to multiple messenger.
 
 ## Supported Messenger
 
-How to configure the messenger:
+- Discord
+- Telegram
+- Twitter
+- Mastodon
 
-- [Discord](https://it.martin-walther.ch/discord/)
-- [Telegram](https://it.martin-walther.ch/telegram/)
-- [Twitter](https://powershellisfun.com/2022/08/01/create-a-tweet-on-twitter-using-powershell/)
-- [Mastodon](https://gist.github.com/jdhitsolutions/7bb8fe659cd32a7bfb2debdb7f0bfcfc)
+## How to configure Discord
+
+Found on [my Blog](https://it.martin-walther.ch/discord/) (in german).
+
+## How to configure Telegram
+
+Found on [my Blog](https://it.martin-walther.ch/telegram/) (in german).
+
+## How to configure Twitter
+
+Found on the Blog of [Harm Veenstra](https://github.com/HarmVeenstra): [Create a Tweet on Twitter using PowerShell](https://powershellisfun.com/2022/08/01/create-a-tweet-on-twitter-using-powershell/)
+
+## How to configure Mastodon
+
+You need an access token that has at least write access to your status
+
+- Go to Preferences -> settings -> Development
+- Click "New Application"
+- Enter a name
+- Allow "write:statuses
+- Click Submit
+- Click on the new application to review the keys
+- Copy and securely store the "Access token" for your script.
 
 ## How to use
 

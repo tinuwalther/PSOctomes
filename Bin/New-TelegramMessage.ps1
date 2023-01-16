@@ -48,7 +48,6 @@ process {
         Write-Verbose "Payload:"
         Write-Verbose "$($payload | Out-String)"
     
-        #$Token = [System.Net.NetworkCredential]::new("", ($creds | Where-Object UserName -eq Telegram).Password).Password #Read-Host -Prompt 'Enter the Token for Telegram' -MaskInput
         $Token  = $PSOctomes | Where-Object User -eq Telegram_Token | Select-Object -ExpandProperty Token
         $ApiUri = $PSOctomes | Where-Object User -eq Telegram_Token | Select-Object -ExpandProperty ApiUri
         $Properties = @{
@@ -58,7 +57,7 @@ process {
             ContentType = 'application/json; charset=UTF-8'
             ErrorAction = 'Stop'
         }
-        #$ret = Invoke-RestMethod -Uri "$($WebhookUrl)?chat_id=$($ChatID)&text=$($Message)&parse_mode=$($ParseMode)"
+
         $ret = Invoke-RestMethod @Properties
 
         Write-Host "$($function)"

@@ -80,7 +80,6 @@ process{
         Write-Verbose "FullMessage:"
         Write-Verbose "$($payload | Out-String)"
 
-        #$Token = [System.Net.NetworkCredential]::new("", ($PSOctomes | Where-Object UserName -eq Discord).Password).Password #Read-Host -Prompt 'Enter the Token for Discord' -MaskInput
         $Token  = $PSOctomes | Where-Object User -eq Discord_Token | Select-Object -ExpandProperty Token
         $ApiUri = $PSOctomes | Where-Object User -eq Discord_Token | Select-Object -ExpandProperty ApiUri
         $Properties = @{

@@ -1,9 +1,10 @@
 <#
 Based on a function from https://gist.github.com/dhmacher/2203582502c7ab13015db8f52e94da45
+and https://gist.github.com/jdhitsolutions/7bb8fe659cd32a7bfb2debdb7f0bfcfc
 
 You need an access token that has at least write access to your status
 
-* go to settings -> Development
+* Go to Preferences -> settings -> Development
 * Click "New Application"
 * Enter a name
 * Allow "write:statuses
@@ -11,10 +12,7 @@ You need an access token that has at least write access to your status
 * Click on the new application to review the keys
 * Copy and securely store the "Access token" for your script.
 
-This code is freely available to use and or modify.
 #>
-
-#TODO: Post an image with a status including ALT text for the description
 
 [CmdletBinding(SupportsShouldProcess)]
 param (
@@ -51,7 +49,6 @@ process {
         Write-Verbose "Payload:"
         Write-Verbose "$($payload | Out-String)"
 
-        #$Token = [System.Net.NetworkCredential]::new("", ($PSOctomes | Where-Object UserName -eq Mastodon).Password).Password #Read-Host -Prompt 'Enter the Token for Mastodon' -MaskInput
         $Token  = $PSOctomes | Where-Object User -eq Mastodon_Token | Select-Object -ExpandProperty Token
         $ApiUri = $PSOctomes | Where-Object User -eq Mastodon_Token | Select-Object -ExpandProperty ApiUri
         $Properties = @{
