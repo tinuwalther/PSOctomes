@@ -94,13 +94,19 @@ try{
 #region Variables
 if([String]::IsNullOrEmpty($Message)){
 $Message = @"
-Hi
-
-Finally, I send this message to multiple messenger with #PowerShell and #PSOctomes.
-
-https://github.com/tinuwalther/PSOctomes
+Hi #PowerShell folks
+I published a fix of my #PsNetTools, please update
+https://powershellgallery.com/packages/PsNetTools.
+Send with #PSOctomes
 "@
 }
+
+if($Message.Length -gt 140){
+    $FColor = 'Yellow'
+}else{
+    $FColor = 'Green'
+}
+Write-Host ("Length of tweet is {0} characters." -f $Message.Length) -ForegroundColor $FColor
 #endregion
     
 #region Discord
@@ -143,12 +149,16 @@ if($SendToMastodon){
 
 #region Twitter
 if($SendToTwitter){
-    $Properties = @{
-        #ApiUri    = "https://api.twitter.com/2/tweets"
-        Message   = $Message
-        PSOctomes = $SecretObject
+    if ($Message.Length -gt 140) {
+        Write-Warning ("Length of tweet is {0} characters, maximum amount on twitter is 140. Aborting..." -f $Message.Length)
+    }else{
+        $Properties = @{
+            #ApiUri    = "https://api.twitter.com/2/tweets"
+            Message   = $Message
+            PSOctomes = $SecretObject
+        }
+        .\Bin\New-TwitterMessage.ps1 @Properties #-Verbose
     }
-    .\Bin\New-TwitterMessage.ps1 @Properties #-Verbose
 }
 #endregion
 
