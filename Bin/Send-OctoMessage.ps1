@@ -93,12 +93,7 @@ try{
 
 #region Variables
 if([String]::IsNullOrEmpty($Message)){
-$Message = @"
-Hi #PowerShell folks
-I published a fix of my #PsNetTools, please update
-https://powershellgallery.com/packages/PsNetTools.
-Send with #PSOctomes
-"@
+    $Message = Get-Content -Path Join-Path -Path $($PSScriptRoot).Replace('Bin','data') -ChildPath 'input.txt'
 }
 
 if($Message.Length -gt 140){

@@ -2,6 +2,12 @@
 
 PowerShell Script to send messages to multiple messenger.
 
+<center>
+
+![Image](img/Octomes.png)
+
+</center>
+
 ## Supported Messenger
 
 - Discord

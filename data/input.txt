@@ -1,0 +1,4 @@
+Hi #PowerShell folks
+I published a fix of my #PsNetTools, pls update
+https://powershellgallery.com/packages/PsNetTools.
+Send with #PSOctomes
