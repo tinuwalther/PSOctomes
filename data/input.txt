@@ -1,4 +1,3 @@
 Hi #PowerShell folks
-I published a fix of my #PsNetTools, pls update
-https://powershellgallery.com/packages/PsNetTools.
-Send with #PSOctomes
+I send this message to multiple messenger with #PowerShell and #PSOctomes.
+https://github.com/tinuwalther/PSOctomes

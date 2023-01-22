@@ -2,11 +2,7 @@
 
 PowerShell Script to send messages to multiple messenger.
 
-<center>
-
 ![Image](img/Octomes.png)
-
-</center>
 
 ## Supported Messenger
 
@@ -84,10 +80,8 @@ and execute the script Send-OctoMessage.ps1
 
 ````powershell
 $Message = @"
-Hi
-
+Hi #PowerShell folks
 I send this message to multiple messenger with #PowerShell and #PSOctomes.
-
 https://github.com/tinuwalther/PSOctomes
 "@
 
