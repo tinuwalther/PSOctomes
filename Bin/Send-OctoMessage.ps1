@@ -93,7 +93,7 @@ try{
 
 #region Variables
 if([String]::IsNullOrEmpty($Message)){
-    $Message = Get-Content -Path Join-Path -Path $($PSScriptRoot).Replace('Bin','data') -ChildPath 'input.txt'
+    $Message = Get-Content -Path (Join-Path -Path $($PSScriptRoot).Replace('bin','data') -ChildPath 'input.txt')
 }
 
 if($Message.Length -gt 140){
