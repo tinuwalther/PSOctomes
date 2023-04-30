@@ -48,11 +48,6 @@ process {
 
         try{
 
-            $ApiKey            = "$($PSOctomes | Where-Object User -eq Twitter_ApiKey            | Select-Object -ExpandProperty Token)"
-            $ApiSecret         = "$($PSOctomes | Where-Object User -eq Twitter_ApiSecret         | Select-Object -ExpandProperty Token)"
-            $AccessToken       = "$($PSOctomes | Where-Object User -eq Twitter_AccessToken       | Select-Object -ExpandProperty Token)"
-            $AccessTokenSecret = "$($PSOctomes | Where-Object User -eq Twitter_AccessTokenSecret | Select-Object -ExpandProperty Token)"
-
             if(Test-TwitterAuthentication){
                 Write-Verbose "TwitterAuthentication: $true"
             }else{
