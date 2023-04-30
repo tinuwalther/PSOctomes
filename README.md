@@ -1,6 +1,6 @@
 # PSOctomes
 
-PowerShell Script to send messages to multiple messenger.
+PowerShell Module to send messages to multiple messenger.
 
 ![Image](img/Octomes.png)
 
