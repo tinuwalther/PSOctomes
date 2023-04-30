@@ -80,7 +80,7 @@ if ($PSCmdlet.ShouldProcess($PSBoundParameters.Values)){
 
     #region Variables
     if([String]::IsNullOrEmpty($Message)){
-        $Message = Get-Content -Path (Join-Path -Path $($PSScriptRoot).Replace('Bin','data') -ChildPath 'input.txt')
+        $Message = Get-Content -Path (Join-Path -Path $($PSScriptRoot).Replace('bin','data') -ChildPath 'input.txt')
     }
 
     if($Message.Length -gt 140){
@@ -100,7 +100,7 @@ if ($PSCmdlet.ShouldProcess($PSBoundParameters.Values)){
             AuthorAvatar       = 'https://it.martin-walther.ch/wp-content/uploads/Bearded.jpg'
             PSOctomes          = $SecretObject
         }
-        .\Bin\New-DiscordMessage.ps1 @Properties #-Verbose
+        .\bin\New-DiscordMessage.ps1 @Properties #-Verbose
     }
     #endregion
 
@@ -112,7 +112,7 @@ if ($PSCmdlet.ShouldProcess($PSBoundParameters.Values)){
             Html      = $true
             PSOctomes = $SecretObject
         }
-        .\Bin\New-TelegramMessage.ps1 @Properties #-Verbose
+        .\bin\New-TelegramMessage.ps1 @Properties #-Verbose
     }
     #endregion
 
@@ -124,7 +124,7 @@ if ($PSCmdlet.ShouldProcess($PSBoundParameters.Values)){
             Message   = $Message
             PSOctomes = $SecretObject
         }
-        .\Bin\New-MastodonMessage.ps1 @Properties #-Verbose
+        .\bin\New-MastodonMessage.ps1 @Properties #-Verbose
     }
     #endregion
 
@@ -138,7 +138,7 @@ if ($PSCmdlet.ShouldProcess($PSBoundParameters.Values)){
                 Message   = $Message
                 PSOctomes = $SecretObject
             }
-            .\Bin\New-TwitterMessage.ps1 @Properties #-Verbose
+            .\bin\New-TwitterMessage.ps1 @Properties #-Verbose
         }
     }
     #endregion
