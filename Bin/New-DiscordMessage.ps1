@@ -1,4 +1,4 @@
-[CmdletBinding()]
+[CmdletBinding(SupportsShouldProcess=$True)]
     param(
         [Parameter(Mandatory=$false)]
         [String] $ApiUri,
@@ -39,65 +39,66 @@ begin{
 
 process{
     Write-Verbose $('[', (Get-Date -f 'yyyy-MM-dd HH:mm:ss.fff'), ']', '[ Process ]', $function -Join ' ')
+    if ($PSCmdlet.ShouldProcess($PSBoundParameters.Values)){
+        try{
 
-    try{
+            #region Facts
+            if([String]::IsNullOrEmpty($FactTitle)){
+                # New section with no embed object
+                $EmbededSection = @{
+                    'title'       = $SectionTitle
+                    'description' = "@here: " + $SectionDescription
+                    'color'       = $SectionColor
+                }
+            }else{
+                $EmbededFacts = @{
+                    'name'   = $FactTitle
+                    'value'  = $FactMessage
+                    'inline' = $false
+                }
+                Write-Verbose "EmbededFacts:"
+                Write-Verbose "$($EmbededFacts | Out-String)"
 
-        #region Facts
-        if([String]::IsNullOrEmpty($FactTitle)){
-            # New section with no embed object
-            $EmbededSection = @{
-                'title'       = $SectionTitle
-                'description' = "@here: " + $SectionDescription
-                'color'       = $SectionColor
+                # New section as embed object
+                $EmbededSection = @{
+                    'title'       = $SectionTitle
+                    'description' = "@here: " + $SectionDescription
+                    'color'       = $SectionColor
+                    "fields"      = @($EmbededFacts)
+                }
             }
-        }else{
-            $EmbededFacts = @{
-                'name'   = $FactTitle
-                'value'  = $FactMessage
-                'inline' = $false
+            Write-Verbose "EmbededSection:"
+            Write-Verbose "$($EmbededSection | Out-String)"
+            #endregion
+
+            # Full message
+            $payload = @{
+                'username'   = $AuthorName
+                'avatar_url' = $AuthorAvatar
+                "embeds"     = @($EmbededSection)
             }
-            Write-Verbose "EmbededFacts:"
-            Write-Verbose "$($EmbededFacts | Out-String)"
+            Write-Verbose "FullMessage:"
+            Write-Verbose "$($payload | Out-String)"
 
-            # New section as embed object
-            $EmbededSection = @{
-                'title'       = $SectionTitle
-                'description' = "@here: " + $SectionDescription
-                'color'       = $SectionColor
-                "fields"      = @($EmbededFacts)
+            $Token  = $PSOctomes | Where-Object User -eq Discord_Token | Select-Object -ExpandProperty Token
+            $ApiUri = $PSOctomes | Where-Object User -eq Discord_Token | Select-Object -ExpandProperty ApiUri
+            $Properties = @{
+                Uri         = "$($ApiUri)/$($Token)" #"https://discord.com/api/webhooks/$($Token)"
+                Body        = (ConvertTo-Json -Depth 6 -InputObject $payload)
+                Method      = 'POST'
+                ContentType = 'application/json; charset=UTF-8'
+                ErrorAction = 'Stop'
             }
+            $ret = Invoke-RestMethod @Properties
+
+            #Write-Host "$($function)"
+            #$ret | Out-String
+
+        }catch{
+            Write-Warning $('ScriptName:', $($_.InvocationInfo.ScriptName), 'LineNumber:', $($_.InvocationInfo.ScriptLineNumber), 'Message:', $($_.Exception.Message) -Join ' ')
+            $ret = $($_.Exception.Message)
+            $Error.Clear()
         }
-        Write-Verbose "EmbededSection:"
-        Write-Verbose "$($EmbededSection | Out-String)"
-        #endregion
-
-        # Full message
-        $payload = @{
-            'username'   = $AuthorName
-            'avatar_url' = $AuthorAvatar
-            "embeds"     = @($EmbededSection)
-        }
-        Write-Verbose "FullMessage:"
-        Write-Verbose "$($payload | Out-String)"
-
-        $Token  = $PSOctomes | Where-Object User -eq Discord_Token | Select-Object -ExpandProperty Token
-        $ApiUri = $PSOctomes | Where-Object User -eq Discord_Token | Select-Object -ExpandProperty ApiUri
-        $Properties = @{
-            Uri         = "$($ApiUri)/$($Token)" #"https://discord.com/api/webhooks/$($Token)"
-            Body        = (ConvertTo-Json -Depth 6 -InputObject $payload)
-            Method      = 'POST'
-            ContentType = 'application/json; charset=UTF-8'
-            ErrorAction = 'Stop'
-        }
-        $ret = Invoke-RestMethod @Properties
-
-        Write-Host "$($function)"
-        $ret | Out-String
-
-    }catch{
-        Write-Warning $('ScriptName:', $($_.InvocationInfo.ScriptName), 'LineNumber:', $($_.InvocationInfo.ScriptLineNumber), 'Message:', $($_.Exception.Message) -Join ' ')
-        $ret = $($_.Exception.Message)
-        $Error.Clear()
     }
 }
 

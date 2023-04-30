@@ -1,4 +1,6 @@
-[CmdletBinding()]
+#Requires -Modules Microsoft.PowerShell.SecretManagement, Microsoft.PowerShell.SecretStore, SecretManagement.KeePass, BluebirdPS
+
+[CmdletBinding(SupportsShouldProcess=$True)]
 param (
     [Parameter(Mandatory=$false)]
     [Switch] $SendToDiscord,
@@ -56,104 +58,89 @@ function Get-MWASecretsFromVault{
 }
 #endregion
 
-#region Secret
-$SecretVault  = 'PSOctomes'
-$AllSecrets   = Get-MWASecretsFromVault -Vault $SecretVault
-$SecretObject = foreach($item in $AllSecrets){
-    try{
-        $Secret = Get-Secret -Vault $SecretVault -Name $item.Name -ErrorAction Stop
-        [PSCustomObject]@{
-            Name   = $item.Name
-            User   = $Secret.UserName
-            ApiUri = $item.ApiUri
-            Token = [System.Net.NetworkCredential]::new($Secret.UserName, $Secret.Password).Password
+if ($PSCmdlet.ShouldProcess($PSBoundParameters.Values)){
+
+    #region Secret
+    $SecretVault  = 'PSOctomes'
+    $AllSecrets   = Get-MWASecretsFromVault -Vault $SecretVault
+    $SecretObject = foreach($item in $AllSecrets){
+        try{
+            $Secret = Get-Secret -Vault $SecretVault -Name $item.Name -ErrorAction Stop
+            [PSCustomObject]@{
+                Name   = $item.Name
+                User   = $Secret.UserName
+                ApiUri = $item.ApiUri
+                Token = [System.Net.NetworkCredential]::new($Secret.UserName, $Secret.Password).Password
+            }
+        }catch{
+            $Error.Clear()
         }
-    }catch{
-        $Error.Clear()
     }
-}
+    #endregion
 
-<# 
-$cred = 'Discord','Telegram','Mastodon', 'TwitterApiKey', 'TwitterAccessToken' | ForEach-Object {
-    Get-Credential -Message "Enter the Token for $_" -UserName $_
-}
-$cred | Export-Clixml
-try{
-    $Clixml = Import-Clixml
-    if([string]::IsNullOrEmpty($Clixml)){
-        Write-Warning "Credential-file not found!"
-        break
+    #region Variables
+    if([String]::IsNullOrEmpty($Message)){
+        $Message = Get-Content -Path (Join-Path -Path $($PSScriptRoot).Replace('Bin','data') -ChildPath 'input.txt')
     }
-}catch{
-    Write-Warning $($_.Exception.Message)
-    break
-}
-#>
-#endregion
 
-#region Variables
-if([String]::IsNullOrEmpty($Message)){
-    $Message = Get-Content -Path (Join-Path -Path $($PSScriptRoot).Replace('bin','data') -ChildPath 'input.txt')
-}
-
-if($Message.Length -gt 140){
-    $FColor = 'Yellow'
-}else{
-    $FColor = 'Green'
-}
-Write-Host ("Length of tweet is {0} characters." -f $Message.Length) -ForegroundColor $FColor
-#endregion
-    
-#region Discord
-if($SendToDiscord){
-    $Properties = @{
-        #ApiUri             = "https://discord.com/api/webhooks"
-        SectionDescription = $Message
-        AuthorName         = 'tinu'
-        AuthorAvatar       = 'https://it.martin-walther.ch/wp-content/uploads/Bearded.jpg'
-        PSOctomes          = $SecretObject
-    }
-    .\Bin\New-DiscordMessage.ps1 @Properties #-Verbose
-}
-#endregion
-
-#region Telegram
-if($SendToTelegram){
-    $Properties = @{
-        #ApiUri    = "https://api.telegram.org/bot"
-        Message   = $Message
-        #ChatId    = 2043926767
-        Html      = $true
-        PSOctomes = $SecretObject
-    }
-    .\Bin\New-TelegramMessage.ps1 @Properties #-Verbose
-}
-#endregion
-
-#region Mastodon
-if($SendToMastodon){
-    #$MastodonInstance = 'techhub.social'
-    $Properties = @{
-        #ApiUri    = "https://$($MastodonInstance)/api/v1/statuses"
-        Message   = $Message
-        PSOctomes = $SecretObject
-    }
-    .\Bin\New-MastodonMessage.ps1 @Properties #-Verbose
-}
-#endregion
-
-#region Twitter
-if($SendToTwitter){
-    if ($Message.Length -gt 140) {
-        Write-Warning ("Length of tweet is {0} characters, maximum amount on twitter is 140. Aborting..." -f $Message.Length)
+    if($Message.Length -gt 140){
+        $FColor = 'Yellow'
     }else{
+        $FColor = 'Green'
+    }
+    Write-Host ("Length of tweet is {0} characters." -f $Message.Length) -ForegroundColor $FColor
+    #endregion
+    
+    #region Discord
+    if($SendToDiscord){
         $Properties = @{
-            #ApiUri    = "https://api.twitter.com/2/tweets"
+            #ApiUri             = "https://discord.com/api/webhooks"
+            SectionDescription = $Message
+            AuthorName         = 'tinu'
+            AuthorAvatar       = 'https://it.martin-walther.ch/wp-content/uploads/Bearded.jpg'
+            PSOctomes          = $SecretObject
+        }
+        .\Bin\New-DiscordMessage.ps1 @Properties #-Verbose
+    }
+    #endregion
+
+    #region Telegram
+    if($SendToTelegram){
+        $Properties = @{
+            #ApiUri    = "https://api.telegram.org/bot"
+            Message   = $Message
+            Html      = $true
+            PSOctomes = $SecretObject
+        }
+        .\Bin\New-TelegramMessage.ps1 @Properties #-Verbose
+    }
+    #endregion
+
+    #region Mastodon
+    if($SendToMastodon){
+        #$MastodonInstance = 'techhub.social'
+        $Properties = @{
+            #ApiUri    = "https://$($MastodonInstance)/api/v1/statuses"
             Message   = $Message
             PSOctomes = $SecretObject
         }
-        .\Bin\New-TwitterMessage.ps1 @Properties #-Verbose
+        .\Bin\New-MastodonMessage.ps1 @Properties #-Verbose
     }
-}
-#endregion
+    #endregion
 
+    #region Twitter
+    if($SendToTwitter){
+        if ($Message.Length -gt 140) {
+            Write-Warning ("Length of tweet is {0} characters, maximum amount on twitter is 140. Aborting..." -f $Message.Length)
+        }else{
+            $Properties = @{
+                #ApiUri    = "https://api.twitter.com/2/tweets"
+                Message   = $Message
+                PSOctomes = $SecretObject
+            }
+            .\Bin\New-TwitterMessage.ps1 @Properties #-Verbose
+        }
+    }
+    #endregion
+
+}

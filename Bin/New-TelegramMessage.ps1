@@ -1,4 +1,4 @@
-[CmdletBinding()]
+[CmdletBinding(SupportsShouldProcess=$True)]
 param (
     [Parameter(Mandatory=$false)]
     [String] $ApiUri,
@@ -6,7 +6,7 @@ param (
     [Parameter(Mandatory=$false)]
     [Switch]$Html,
 
-    [Parameter(Mandatory=$true)]
+    [Parameter(Mandatory=$false)]
     [ValidateNotNullOrEmpty()]
     [String] $Message,
 
@@ -27,46 +27,46 @@ begin {
 
 process {
     Write-Verbose $('[', (Get-Date -f 'yyyy-MM-dd HH:mm:ss.fff'), ']', '[ Process ]', $function -Join ' ')
+    if ($PSCmdlet.ShouldProcess($PSBoundParameters.Values)){
+        try{
+            [Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12
+            if($Html){
+                $ParseMode = 'html'
+            }else{
+                $ParseMode = 'MarkdownV2'
+            }
 
-    try{
+            $ChatID  = $PSOctomes | Where-Object User -eq Telegram_ChatId | Select-Object -ExpandProperty Token
+            $payload = @{
+                "chat_id"                   = $ChatID
+                "text"                      = $Message
+                "parse_mode"                = $ParseMode
+                "disable_web_page_preview"  = $false
+                "disable_notification"      = $false
+            }
+            Write-Verbose "Payload:"
+            Write-Verbose "$($payload | Out-String)"
+        
+            $Token  = $PSOctomes | Where-Object User -eq Telegram_Token | Select-Object -ExpandProperty Token
+            $ApiUri = $PSOctomes | Where-Object User -eq Telegram_Token | Select-Object -ExpandProperty ApiUri
+            $Properties = @{
+                Uri         = "$($ApiUri)$($Token)/sendMessage" #"https://api.telegram.org/bot$($Token)/sendMessage"
+                Body        = (ConvertTo-Json -Depth 6 -InputObject $payload)
+                Method      = 'POST'
+                ContentType = 'application/json; charset=UTF-8'
+                ErrorAction = 'Stop'
+            }
 
-        [Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12
-        if($Html){
-            $ParseMode = 'html'
-        }else{
-            $ParseMode = 'MarkdownV2'
+            $ret = Invoke-RestMethod @Properties
+
+            #Write-Host "$($function)"
+            #$ret | Out-String
+
+        }catch{
+            Write-Warning $('ScriptName:', $($_.InvocationInfo.ScriptName), 'LineNumber:', $($_.InvocationInfo.ScriptLineNumber), 'Message:', $($_.Exception.Message) -Join ' ')
+            $ret = $($_.Exception.Message)
+            $Error.Clear()
         }
-
-        $ChatID  = $PSOctomes | Where-Object User -eq Telegram_ChatId | Select-Object -ExpandProperty Token
-        $payload = @{
-            "chat_id"                   = $ChatID
-            "text"                      = $Message
-            "parse_mode"                = $ParseMode
-            "disable_web_page_preview"  = $false
-            "disable_notification"      = $false
-        }
-        Write-Verbose "Payload:"
-        Write-Verbose "$($payload | Out-String)"
-    
-        $Token  = $PSOctomes | Where-Object User -eq Telegram_Token | Select-Object -ExpandProperty Token
-        $ApiUri = $PSOctomes | Where-Object User -eq Telegram_Token | Select-Object -ExpandProperty ApiUri
-        $Properties = @{
-            Uri         = "$($ApiUri)$($Token)/sendMessage" #"https://api.telegram.org/bot$($Token)/sendMessage"
-            Body        = (ConvertTo-Json -Depth 6 -InputObject $payload)
-            Method      = 'POST'
-            ContentType = 'application/json; charset=UTF-8'
-            ErrorAction = 'Stop'
-        }
-
-        $ret = Invoke-RestMethod @Properties
-
-        Write-Host "$($function)"
-        $ret | Out-String
-
-    }catch{
-        Write-Warning $('ScriptName:', $($_.InvocationInfo.ScriptName), 'LineNumber:', $($_.InvocationInfo.ScriptLineNumber), 'Message:', $($_.Exception.Message) -Join ' ')
-        $ret = $($_.Exception.Message)
-        $Error.Clear()
     }
 }
 

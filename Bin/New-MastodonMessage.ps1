@@ -14,13 +14,13 @@ You need an access token that has at least write access to your status
 
 #>
 
-[CmdletBinding(SupportsShouldProcess)]
+[CmdletBinding(SupportsShouldProcess=$True)]
 param (
     [Parameter(Mandatory=$false)]
     [ValidateNotNullOrEmpty()]
     [string] $ApiUri,
 
-    [Parameter(Mandatory=$true)]
+    [Parameter(Mandatory=$false)]
     [ValidateNotNullOrEmpty()]
     [string] $Message,
 
@@ -37,38 +37,37 @@ begin {
 
 process {
     Write-Verbose $('[', (Get-Date -f 'yyyy-MM-dd HH:mm:ss.fff'), ']', '[ Process ]', $function -Join ' ')
+    if ($PSCmdlet.ShouldProcess($PSBoundParameters.Values)){
+        try{
 
-    try{
+            Write-Verbose "Posting to $WebhookUrl"
 
-        Write-Verbose "Posting to $WebhookUrl"
+            $payload = @{
+                status = $Message
+            }
 
-        $payload = @{
-            status = $Message
+            Write-Verbose "Payload:"
+            Write-Verbose "$($payload | Out-String)"
+
+            $Token  = $PSOctomes | Where-Object User -eq Mastodon_Token | Select-Object -ExpandProperty Token
+            $ApiUri = $PSOctomes | Where-Object User -eq Mastodon_Token | Select-Object -ExpandProperty ApiUri
+            $Properties = @{
+                Uri         = "$($ApiUri)?access_token=$($Token)"
+                Method      = 'POST'
+                ContentType = 'application/json; charset=UTF-8'
+                Body        = (ConvertTo-Json -Depth 6 -InputObject $payload)
+                ErrorAction = 'Stop'
+            }
+            $ret = Invoke-RestMethod @Properties
+
+            #Write-Host "$($function)"
+            #$ret | Out-String
+
+        }catch{
+            Write-Warning $('ScriptName:', $($_.InvocationInfo.ScriptName), 'LineNumber:', $($_.InvocationInfo.ScriptLineNumber), 'Message:', $($_.Exception.Message) -Join ' ')
+            $ret = $($_.Exception.Message)
+            $Error.Clear()
         }
-
-        Write-Verbose "Payload:"
-        Write-Verbose "$($payload | Out-String)"
-
-        $Token  = $PSOctomes | Where-Object User -eq Mastodon_Token | Select-Object -ExpandProperty Token
-        $ApiUri = $PSOctomes | Where-Object User -eq Mastodon_Token | Select-Object -ExpandProperty ApiUri
-        $Properties = @{
-            Uri         = "$($ApiUri)?access_token=$($Token)"
-            Method      = 'POST'
-            #Body        = $payload
-            #ContentType = 'application/x-www-form-urlencoded'
-            ContentType = 'application/json; charset=UTF-8'
-            Body        = (ConvertTo-Json -Depth 6 -InputObject $payload)
-            ErrorAction = 'Stop'
-        }
-        $ret = Invoke-RestMethod @Properties
-
-        Write-Host "$($function)"
-        $ret | Out-String
-
-    }catch{
-        Write-Warning $('ScriptName:', $($_.InvocationInfo.ScriptName), 'LineNumber:', $($_.InvocationInfo.ScriptLineNumber), 'Message:', $($_.Exception.Message) -Join ' ')
-        $ret = $($_.Exception.Message)
-        $Error.Clear()
     }
 }
 
