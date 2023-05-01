@@ -1,5 +1,5 @@
 <#
-    Generated at 05/01/2023 08:37:25 by Martin Walther
+    Generated at 05/01/2023 09:27:58 by Martin Walther
 #>
 #region namespace PSOctomes
 function Get-PSSecretsFromVault {
@@ -663,25 +663,24 @@ function Write-PSLog{
 
 }
 
-#Requires -Modules Microsoft.PowerShell.SecretManagement, Microsoft.PowerShell.SecretStore, SecretManagement.KeePass, BluebirdPS
 function Send-PSOctoMessage {
     <#
     .SYNOPSIS
         Send messages to multiple messengers
     .DESCRIPTION
-        A longer description of the function, its purpose, common use cases, etc.
+        Send messages to multiple messengers. Supported Messenger Discord, Telegram, Mastodon, Twitter
     .NOTES
         Information or caveats about the function e.g. 'This function is not supported in Linux'
     .LINK
-        Specify a URI to a help page, this will show when Get-Help -Online is used.
+        https://github.com/tinuwalther/PSOctomes#readme
     .PARAMETER SendToDiscord
-        Send message to Discord
+        Switch to send message to Discord
     .PARAMETER SendToTelegram
-        Send message to Telegram
+         Switch to send message to Telegram
     .PARAMETER SendToMastodon
-        Send message to Mastodon
+         Switch to send message to Mastodon
     .PARAMETER SendToTwitter
-        Send message to Twitter
+         Switch to send message to Twitter
     .PARAMETER Message
         Send a message between 5 and 140 characters
     .EXAMPLE
@@ -721,7 +720,7 @@ function Send-PSOctoMessage {
 
         #region Secret
         $SecretVault = 'PSOctomes'
-        $AllSecrets = Get-MWASecretsFromVault -Vault $SecretVault
+        $AllSecrets = Get-PSSecretsFromVault -Vault $SecretVault
         $SecretObject = foreach ($item in $AllSecrets) {
             try {
                 $Secret = Get-Secret -Vault $SecretVault -Name $item.Name -ErrorAction Stop
@@ -761,7 +760,7 @@ function Send-PSOctoMessage {
                 AuthorAvatar       = 'https://it.martin-walther.ch/wp-content/uploads/Bearded.jpg'
                 PSOctomes          = $SecretObject
             }
-            .\bin\New-DiscordMessage.ps1 @Properties #-Verbose
+            New-PSDiscordMessage @Properties #-Verbose
         }
         #endregion
 
@@ -773,7 +772,7 @@ function Send-PSOctoMessage {
                 Html      = $true
                 PSOctomes = $SecretObject
             }
-            .\bin\New-TelegramMessage.ps1 @Properties #-Verbose
+            New-PSTelegramMessage @Properties #-Verbose
         }
         #endregion
 
@@ -785,7 +784,7 @@ function Send-PSOctoMessage {
                 Message   = $Message
                 PSOctomes = $SecretObject
             }
-            .\bin\New-MastodonMessage.ps1 @Properties #-Verbose
+            New-PSMastodonMessage @Properties #-Verbose
         }
         #endregion
 
@@ -800,7 +799,7 @@ function Send-PSOctoMessage {
                     Message   = $Message
                     PSOctomes = $SecretObject
                 }
-                .\bin\New-TwitterMessage.ps1 @Properties #-Verbose
+                New-PSTwitterMessage @Properties #-Verbose
             }
         }
         #endregion

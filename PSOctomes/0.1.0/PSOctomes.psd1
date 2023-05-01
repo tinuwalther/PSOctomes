@@ -12,13 +12,13 @@
 RootModule = 'PSOctomes.psm1'
 
 # Version number of this module.
-ModuleVersion = '0.0.8'
+ModuleVersion = '0.0.10'
 
 # Supported PSEditions
 # CompatiblePSEditions = @()
 
 # ID used to uniquely identify this module
-GUID = '8cc6e70a-ddc6-4522-9d04-a7543bae2050'
+GUID = 'bbfc5c3b-16c1-4145-9ffc-957e7040d738'
 
 # Author of this module
 Author = 'Martin Walther'
@@ -51,7 +51,7 @@ PowerShellVersion = '5.1'
 # ProcessorArchitecture = ''
 
 # Modules that must be imported into the global environment prior to importing this module
-# RequiredModules = @()
+RequiredModules = @('Microsoft.PowerShell.SecretManagement', 'Microsoft.PowerShell.SecretStore', 'SecretManagement.KeePass', 'BluebirdPS')
 
 # Assemblies that must be loaded prior to importing this module
 # RequiredAssemblies = @()
