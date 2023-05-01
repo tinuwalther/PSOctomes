@@ -65,7 +65,7 @@ function New-PSTelegramMessage {
 
                 $ChatID = $PSOctomes | Where-Object User -eq Telegram_ChatId | Select-Object -ExpandProperty Token
                 $payload = @{
-                    "chat_id"                  = ConvertFrom-SecureString -SecureString $ChatID -AsPlainText
+                    "chat_id"                  = [Int32](ConvertFrom-SecureString -SecureString $ChatID -AsPlainText)
                     "text"                     = $Message
                     "parse_mode"               = $ParseMode
                     "disable_web_page_preview" = $false
