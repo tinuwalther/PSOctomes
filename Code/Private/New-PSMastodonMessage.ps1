@@ -71,7 +71,7 @@ function New-PSMastodonMessage {
                 $Token = $PSOctomes | Where-Object User -eq Mastodon_Token | Select-Object -ExpandProperty Token
                 $ApiUri = $PSOctomes | Where-Object User -eq Mastodon_Token | Select-Object -ExpandProperty ApiUri
                 $Properties = @{
-                    Uri         = "$($ApiUri)?access_token=$(ConvertFrom-SecureString -SecureString $Token -AsPlainText)"
+                    Uri         = "$($ApiUri)?access_token=$($Token)"
                     Method      = 'POST'
                     ContentType = 'application/json; charset=UTF-8'
                     Body        = (ConvertTo-Json -Depth 6 -InputObject $payload)

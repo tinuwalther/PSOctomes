@@ -127,7 +127,7 @@ function New-PSDiscordMessage {
                     $ApiUri = $PSOctomes | Where-Object User -eq Discord_Token | Select-Object -ExpandProperty ApiUri
                 }
                 $Properties = @{
-                    Uri         = "$($ApiUri)/$(ConvertFrom-SecureString -SecureString $Token -AsPlainText)" #"https://discord.com/api/webhooks/$($Token)"
+                    Uri         = "$($ApiUri)/$($Token)" #"https://discord.com/api/webhooks/$($Token)"
                     Body        = (ConvertTo-Json -Depth 6 -InputObject $payload)
                     Method      = 'POST'
                     ContentType = 'application/json; charset=UTF-8'

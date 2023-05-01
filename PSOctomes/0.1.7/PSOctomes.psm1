@@ -1,5 +1,5 @@
 <#
-    Generated at 05/01/2023 12:36:19 by Martin Walther
+    Generated at 05/01/2023 12:40:23 by Martin Walther
 #>
 #region namespace PSOctomes
 function Get-PSSecretsFromVault {
@@ -174,7 +174,7 @@ function New-PSDiscordMessage {
                     $ApiUri = $PSOctomes | Where-Object User -eq Discord_Token | Select-Object -ExpandProperty ApiUri
                 }
                 $Properties = @{
-                    Uri         = "$($ApiUri)/$(ConvertFrom-SecureString -SecureString $Token -AsPlainText)" #"https://discord.com/api/webhooks/$($Token)"
+                    Uri         = "$($ApiUri)/$($Token)" #"https://discord.com/api/webhooks/$($Token)"
                     Body        = (ConvertTo-Json -Depth 6 -InputObject $payload)
                     Method      = 'POST'
                     ContentType = 'application/json; charset=UTF-8'
@@ -274,7 +274,7 @@ function New-PSMastodonMessage {
                 $Token = $PSOctomes | Where-Object User -eq Mastodon_Token | Select-Object -ExpandProperty Token
                 $ApiUri = $PSOctomes | Where-Object User -eq Mastodon_Token | Select-Object -ExpandProperty ApiUri
                 $Properties = @{
-                    Uri         = "$($ApiUri)?access_token=$(ConvertFrom-SecureString -SecureString $Token -AsPlainText)"
+                    Uri         = "$($ApiUri)?access_token=$($Token)"
                     Method      = 'POST'
                     ContentType = 'application/json; charset=UTF-8'
                     Body        = (ConvertTo-Json -Depth 6 -InputObject $payload)
