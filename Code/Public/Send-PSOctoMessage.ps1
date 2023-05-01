@@ -62,7 +62,7 @@ function Send-PSOctoMessage {
                     Name   = $item.Name
                     User   = $item.Name
                     ApiUri = $item.ApiUri
-                    Token  = Get-Secret  -Vault $SecretVault -Name $item.Name -ErrorAction Stop
+                    Token  = Get-Secret  -Vault $SecretVault -Name $item.Name -ErrorAction Stop -AsPlainText
                 }
             }
             catch {
