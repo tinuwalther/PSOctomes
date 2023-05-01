@@ -1,5 +1,5 @@
 <#
-    Generated at 05/01/2023 12:23:42 by Martin Walther
+    Generated at 05/01/2023 12:32:01 by Martin Walther
 #>
 #region namespace PSOctomes
 function Get-PSSecretsFromVault {
@@ -367,8 +367,9 @@ function New-PSTelegramMessage {
                 }
 
                 $ChatID = $PSOctomes | Where-Object User -eq Telegram_ChatId | Select-Object -ExpandProperty Token
+                [Int]$IntID = ConvertFrom-SecureString -SecureString $ChatID -AsPlainText
                 $payload = @{
-                    "chat_id"                  = [Int32](ConvertFrom-SecureString -SecureString $ChatID -AsPlainText)
+                    "chat_id"                  = $IntID
                     "text"                     = $Message
                     "parse_mode"               = $ParseMode
                     "disable_web_page_preview" = $false
