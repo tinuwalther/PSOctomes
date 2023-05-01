@@ -1,6 +1,6 @@
 # PSOctomes
 
-PowerShell Script to send messages to multiple messenger.
+PowerShell Module to send messages to multiple messenger.
 
 ![Image](img/Octomes.png)
 
@@ -44,39 +44,33 @@ git clone https://github.com/tinuwalther/PSOctomes
 cd ./PSOctomes
 ````
 
-Create your credential-file as KeePass-Database with the following entries:
+Install-Modules:
+
+````powershell
+Install-Module Microsoft.PowerShell.SecretManagement, BluebirdPS -Verbose
+Import-Module ./PSOctomes/ -Force
+````
+
+Register SecretVault:
+
+Create your credential as Secrets with the following entries:
 
 - Discord_Token, URL, Token as Password
 - Mastodon_Token, URL, Token as Password
 - Telegram_Token, URL, Token as Password
 - Telegram_ChatId, Id as Password
-- Twitter_ApiKey, Token as Password
-- Twitter_ApiSecret, Token as Password
-- Twitter_AccessToken, Token as Password
-- Twitter_AccessTokenSecret, Token as Password
-
-Install-Modules:
 
 ````powershell
-Install-Module Microsoft.PowerShell.SecretManagement, SecretManagement.KeePass, BluebirdPS -Verbose
-````
-
-Register SecretVault:
-
-````powershell
-Register-SecretVault -Name "PSOctomes" -ModuleName "SecretManagement.Keepass" -VaultParameters @{
-    Path = "$($env:USERPROFILE)\Do*ument*\PSOctomes.kdbx"
-    UseMasterPassword = $true
-}
+New-PSSecretStore -Register -Discord -Telegram -Mastodon -Twitter
 ````
 
 Test the access to the KeePass Vault:
 
 ````powershell
-Get-SecretInfo -Vault PSOctomes -Name Discord_Token | Select-Object -ExpandProperty Metadata
+Get-SecretInfo -Vault PSOctomes | Select-Object Name, @{N='URL';E={$_.Metadata.values}}
 ````
 
-and execute the script Send-OctoMessage.ps1
+and execute the command Send-PSOctoMessage
 
 ````powershell
 $Message = @"
@@ -85,5 +79,5 @@ I send this message to multiple messenger with #PowerShell and #PSOctomes.
 https://github.com/tinuwalther/PSOctomes
 "@
 
-.\Bin\Send-OctoMessage.ps1 -Message $Message -SendToTelegram -SendToDiscord -SendToMastodon -SendToTwitter
+Send-PSOctoMessage -Message $Message -SendToTelegram -SendToDiscord -SendToMastodon -SendToTwitter
 ````
