@@ -58,7 +58,8 @@ Create your credential-file as KeePass-Database with the following entries:
 Install-Modules:
 
 ````powershell
-Install-Module Microsoft.PowerShell.SecretManagement, SecretManagement.KeePass, BluebirdPS -Verbose
+Install-Module Microsoft.PowerShell.SecretManagement, BluebirdPS -Verbose
+Import-Module ./PSOctomes/ -Force
 ````
 
 Register SecretVault:

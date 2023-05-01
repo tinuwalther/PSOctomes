@@ -1,5 +1,5 @@
 <#
-    Generated at 05/01/2023 08:40:54 by Martin Walther
+    Generated at 05/01/2023 11:50:04 by Martin Walther
 #>
 #region namespace PSOctomes
 function Get-PSSecretsFromVault {
@@ -32,16 +32,6 @@ function Get-PSSecretsFromVault {
 
         $SecretInfo = Get-SecretInfo -Vault $Vault -WarningAction SilentlyContinue
         $ret = $SecretInfo | ForEach-Object {
-            $Tags = foreach ($item in $_.Metadata.keys) {
-                if ($item -match 'Tags') {
-                    $($_.Metadata[$item])
-                }
-            }
-            $Accessed = foreach ($item in $_.Metadata.keys) {
-                if ($item -match 'Accessed') {
-                    $($_.Metadata[$item])
-                }
-            }
             $ApiUri = foreach ($item in $_.Metadata.keys) {
                 if ($item -match 'URL') {
                     $($_.Metadata[$item])
@@ -50,8 +40,6 @@ function Get-PSSecretsFromVault {
             [PSCustomObject]@{
                 Name     = $_.Name
                 ApiUri   = $ApiUri
-                Tag      = $Tags
-                Accessed = $Accessed
             }
         }
         return $ret
@@ -663,25 +651,138 @@ function Write-PSLog{
 
 }
 
-#Requires -Modules Microsoft.PowerShell.SecretManagement, Microsoft.PowerShell.SecretStore, SecretManagement.KeePass, BluebirdPS
+function New-PSSecretStore{
+    <#
+    .SYNOPSIS
+        Add secrets for PSOctomes
+    .DESCRIPTION
+        A longer description of the function, its purpose, common use cases, etc.
+    .NOTES
+        Reset-SecretStore
+        WARNING: !!This operation completely removes all SecretStore module secrets and resets configuration settings to new values!!
+
+        Set-SecretStorePassword
+    .LINK
+        Specify a URI to a help page, this will show when Get-Help -Online is used.
+    .EXAMPLE
+        Test-MyTestFunction -Verbose
+        Explanation of the function or its result. You can include multiple examples with additional .EXAMPLE lines
+    #>
+    
+    [CmdletBinding(SupportsShouldProcess = $True)]
+    param (
+        [Parameter(Mandatory = $false)]
+        [Switch] $Register,
+
+        [Parameter(Mandatory = $false)]
+        [Switch] $Discord,
+
+        [Parameter(Mandatory = $false)]
+        [Switch]$Telegram,
+
+        [Parameter(Mandatory = $false)]
+        [Switch] $Mastodon,
+
+        [Parameter(Mandatory = $false)]
+        [Switch] $Twitter,
+
+        [Parameter(Mandatory = $false)]
+        [switch]$Remove
+    )
+
+    $VaultName = "PSOctomes"
+    if($Register){
+        if((Get-SecretVault).Name -match $VaultName){
+            Write-Host "$VaultName already exists" -ForegroundColor Cyan
+        }else{
+            Register-SecretVault -Name $VaultName -ModuleName 'Microsoft.PowerShell.SecretStore' -AllowClobber -VaultParameters @{
+                UseMasterPassword = $true
+                DefaultVault      = $true
+            }
+            Write-Host "Configure Secret Store $VaultName" -ForegroundColor Cyan
+            #Set-SecretStoreConfiguration -Scope CurrentUser -Authentication Password -PasswordTimeout 3600 -Interaction Prompt
+            Set-SecretStorePassword
+        }
+        Write-Host "Get Secret Store $VaultName" -ForegroundColor Cyan
+        Get-SecretStoreConfiguration
+    }
+
+    # if (-not(Test-SecretVault -Name $VaultName)) {
+    #     Write-Host "Unlock Secret Store $VaultName" -ForegroundColor Green
+    #     Unlock-SecretVault -Name $VaultName
+    # }
+
+    Write-Host "Get Secret Vault $VaultName" -ForegroundColor Cyan
+    Write-Host (Get-SecretVault | Out-String)
+
+    #region Discord
+    if($Discord){
+        $name = 'Discord_Token'
+        Write-Host "Add Secret for $name" -ForegroundColor Cyan
+        $cred = Get-Credential -Message "Enter the Token for $name" -UserName $name
+        Set-Secret -Name $cred.UserName -SecureStringSecret $cred.Password -Metadata @{ URL = 'https://discord.com/api/webhooks' } 
+    }
+    #endregion
+
+    #region Mastodon
+    if($Mastodon){
+        $name = 'Mastodon_Token'
+        Write-Host "Add Secret for $name" -ForegroundColor Cyan
+        $cred = Get-Credential -Message "Enter the Token for $name" -UserName $name
+        Set-Secret -Name $cred.UserName -SecureStringSecret $cred.Password -Metadata @{ URL = 'https://techhub.social/api/v1/statuses' } 
+    }
+    #endregion
+
+    #region Telegram
+    if($Telegram){
+        $name = 'Telegram_Token'
+        Write-Host "Add Secret for $name" -ForegroundColor Cyan
+        $cred = Get-Credential -Message "Enter the Token for $name" -UserName $name
+        Set-Secret -Name $cred.UserName -SecureStringSecret $cred.Password -Metadata @{ URL = 'https://api.telegram.org/bot' } 
+    
+        $name = 'Telegram_ChatId'
+        Write-Host "Add Secret for $name" -ForegroundColor Cyan
+        $cred = Get-Credential -Message "Enter the Token for $name" -UserName $name
+        Set-Secret -Name $cred.UserName -SecureStringSecret $cred.Password -Metadata @{ URL = 'https://api.telegram.org/bot' } 
+    }
+    #endregion
+
+    Get-SecretInfo
+
+    #region Twitter
+    if($Twitter){
+        if (Test-TwitterAuthentication) {
+            Write-Host "TwitterAuthentication: $true" -ForegroundColor Cyan
+        }
+        else {
+            Write-Host "Could not authenticate to Twitter, pleases set the authentication values"
+            Set-TwitterAuthentication
+        }
+    }
+    #endregion
+
+    if($Remove){
+        Unregister-SecretVault -Name 'PSOctomes'
+    }
+}
 function Send-PSOctoMessage {
     <#
     .SYNOPSIS
         Send messages to multiple messengers
     .DESCRIPTION
-        A longer description of the function, its purpose, common use cases, etc.
+        Send messages to multiple messengers. Supported Messenger are Discord, Telegram, Mastodon, Twitter.
     .NOTES
         Information or caveats about the function e.g. 'This function is not supported in Linux'
     .LINK
-        Specify a URI to a help page, this will show when Get-Help -Online is used.
+        https://github.com/tinuwalther/PSOctomes#readme
     .PARAMETER SendToDiscord
-        Send message to Discord
+        Switch to send message to Discord
     .PARAMETER SendToTelegram
-        Send message to Telegram
+         Switch to send message to Telegram
     .PARAMETER SendToMastodon
-        Send message to Mastodon
+         Switch to send message to Mastodon
     .PARAMETER SendToTwitter
-        Send message to Twitter
+         Switch to send message to Twitter
     .PARAMETER Message
         Send a message between 5 and 140 characters
     .EXAMPLE
@@ -721,7 +822,7 @@ function Send-PSOctoMessage {
 
         #region Secret
         $SecretVault = 'PSOctomes'
-        $AllSecrets = Get-MWASecretsFromVault -Vault $SecretVault
+        $AllSecrets = Get-PSSecretsFromVault -Vault $SecretVault
         $SecretObject = foreach ($item in $AllSecrets) {
             try {
                 $Secret = Get-Secret -Vault $SecretVault -Name $item.Name -ErrorAction Stop
@@ -761,7 +862,7 @@ function Send-PSOctoMessage {
                 AuthorAvatar       = 'https://it.martin-walther.ch/wp-content/uploads/Bearded.jpg'
                 PSOctomes          = $SecretObject
             }
-            .\bin\New-DiscordMessage.ps1 @Properties #-Verbose
+            New-PSDiscordMessage @Properties #-Verbose
         }
         #endregion
 
@@ -773,7 +874,7 @@ function Send-PSOctoMessage {
                 Html      = $true
                 PSOctomes = $SecretObject
             }
-            .\bin\New-TelegramMessage.ps1 @Properties #-Verbose
+            New-PSTelegramMessage @Properties #-Verbose
         }
         #endregion
 
@@ -785,7 +886,7 @@ function Send-PSOctoMessage {
                 Message   = $Message
                 PSOctomes = $SecretObject
             }
-            .\bin\New-MastodonMessage.ps1 @Properties #-Verbose
+            New-PSMastodonMessage @Properties #-Verbose
         }
         #endregion
 
@@ -800,7 +901,7 @@ function Send-PSOctoMessage {
                     Message   = $Message
                     PSOctomes = $SecretObject
                 }
-                .\bin\New-TwitterMessage.ps1 @Properties #-Verbose
+                New-PSTwitterMessage @Properties #-Verbose
             }
         }
         #endregion

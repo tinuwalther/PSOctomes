@@ -12,13 +12,13 @@
 RootModule = 'PSOctomes.psm1'
 
 # Version number of this module.
-ModuleVersion = '0.1.0'
+ModuleVersion = '0.1.2'
 
 # Supported PSEditions
 # CompatiblePSEditions = @()
 
 # ID used to uniquely identify this module
-GUID = 'bbfc5c3b-16c1-4145-9ffc-957e7040d738'
+GUID = '36ca9756-9395-47c1-9c96-25d9ab507b5a'
 
 # Author of this module
 Author = 'Martin Walther'
@@ -51,7 +51,9 @@ PowerShellVersion = '5.1'
 # ProcessorArchitecture = ''
 
 # Modules that must be imported into the global environment prior to importing this module
-RequiredModules = @('Microsoft.PowerShell.SecretManagement', 'Microsoft.PowerShell.SecretStore', 'SecretManagement.KeePass', 'BluebirdPS')
+RequiredModules = @('Microsoft.PowerShell.SecretManagement', 
+               'Microsoft.PowerShell.SecretStore', 
+               'BluebirdPS')
 
 # Assemblies that must be loaded prior to importing this module
 # RequiredAssemblies = @()
@@ -69,7 +71,7 @@ RequiredModules = @('Microsoft.PowerShell.SecretManagement', 'Microsoft.PowerShe
 # NestedModules = @()
 
 # Functions to export from this module, for best performance, do not use wildcards and do not delete the entry, use an empty array if there are no functions to export.
-FunctionsToExport = 'Send-PSOctoMessage'
+FunctionsToExport = 'New-PSSecretStore', 'Send-PSOctoMessage'
 
 # Cmdlets to export from this module, for best performance, do not use wildcards and do not delete the entry, use an empty array if there are no cmdlets to export.
 CmdletsToExport = '*'
