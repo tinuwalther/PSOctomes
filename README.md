@@ -2,7 +2,7 @@
 
 PowerShell Module to send messages to multiple messenger.
 
-![Image](img/Octomes.png)
+![Image](img/PSOctomes.jfif)
 
 ## Supported Messenger
 
