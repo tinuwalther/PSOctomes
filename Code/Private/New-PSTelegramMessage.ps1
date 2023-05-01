@@ -52,8 +52,9 @@ function New-PSTelegramMessage {
 
     process {
         Write-Verbose $('[', (Get-Date -f 'yyyy-MM-dd HH:mm:ss.fff'), ']', '[ Process ]', $function -Join ' ')
-        if ($PSCmdlet.ShouldProcess($PSBoundParameters.Values)) {
-            try {
+        foreach($item in $PSBoundParameters.keys){ $params = "$($params) -$($item) $($PSBoundParameters[$item])" }
+        if ($PSCmdlet.ShouldProcess($params.Trim())) {
+                try {
                 [Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12
                 if ($Html) {
                     $ParseMode = 'html'

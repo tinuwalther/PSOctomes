@@ -2,4 +2,4 @@
 
 Version | Description | Date | Author
 -|-|-|-
-0.0.6 | Initial release | 2023-04-30 | Martin Walther
+0.0.9 | Initial release | 2023-05-01 | Martin Walther

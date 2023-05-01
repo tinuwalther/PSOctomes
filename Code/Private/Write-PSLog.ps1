@@ -53,13 +53,13 @@ function Write-PSLog{
     begin{
         $function = $($MyInvocation.MyCommand.Name)
         Write-Verbose "Running $function"
-        $ret = $null
     }
 
     process{
 
-        if ($PSCmdlet.ShouldProcess($PSBoundParameters.Values)){
-            try{
+        foreach($item in $PSBoundParameters.keys){ $params = "$($params) -$($item) $($PSBoundParameters[$item])" }
+        if ($PSCmdlet.ShouldProcess($params.Trim())) {
+                try{
                 if([String]::IsNullOrEmpty($LogFile)){
                     $LogFile = $PSCommandPath -replace '.psm1', '.log'
                 }

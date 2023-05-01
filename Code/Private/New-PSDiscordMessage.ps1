@@ -79,8 +79,9 @@ function New-PSDiscordMessage {
 
     process {
         Write-Verbose $('[', (Get-Date -f 'yyyy-MM-dd HH:mm:ss.fff'), ']', '[ Process ]', $function -Join ' ')
-        if ($PSCmdlet.ShouldProcess($PSBoundParameters.Values)) {
-            try {
+        foreach($item in $PSBoundParameters.keys){ $params = "$($params) -$($item) $($PSBoundParameters[$item])" }
+        if ($PSCmdlet.ShouldProcess($params.Trim())) {
+                try {
 
                 #region Facts
                 if ([String]::IsNullOrEmpty($FactTitle)) {

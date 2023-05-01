@@ -56,8 +56,9 @@ function New-PSTwitterMessage {
 
     process {
         Write-Verbose $('[', (Get-Date -f 'yyyy-MM-dd HH:mm:ss.fff'), ']', '[ Process ]', $function -Join ' ')
-        if ($PSCmdlet.ShouldProcess($PSBoundParameters.Values)) {
-            if ($message.Length -gt 140) {
+        foreach($item in $PSBoundParameters.keys){ $params = "$($params) -$($item) $($PSBoundParameters[$item])" }
+        if ($PSCmdlet.ShouldProcess($params.Trim())) {
+                if ($message.Length -gt 140) {
                 Write-Warning ("Length of tweet is {0} characters, maximum amount is 140. Aborting..." -f $Message.Length)
                 break
             }

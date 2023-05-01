@@ -1,152 +1,62 @@
 <#
-    Generated at 04/30/2023 19:26:53 by Martin Walther
+    Generated at 05/01/2023 08:37:25 by Martin Walther
 #>
 #region namespace PSOctomes
-function Write-PSLog{
-    
+function Get-PSSecretsFromVault {
     <#
-
-        .SYNOPSIS
-        Logging
-
-        .DESCRIPTION
-        Log in to file
-
-        .PARAMETER LogFile
-        Full path- and filname to log.
-
-        .PARAMETER Status
-        ERROR, WARNING, or INFO
-
-        .PARAMETER Message
-        A string message to log.
-
-        .PARAMETER MaxLogFileSizeMB
-        Max file-size of the logfile, if the file is greather than max-size it will be renamed.
-
-        .EXAMPLE
-        Write-Log -Status WARNING -Source "Module-Test" -Message "Test Write-Log"
-
-        .NOTES
-        2021-08-10, Martin Walther, 1.0.0, Initial version
-
+    .SYNOPSIS
+        A short one-line action-based description, e.g. 'Tests if a function is valid'
+    .DESCRIPTION
+        A longer description of the function, its purpose, common use cases, etc.
+    .NOTES
+        Information or caveats about the function e.g. 'This function is not supported in Linux'
+    .LINK
+        Specify a URI to a help page, this will show when Get-Help -Online is used.
+    .EXAMPLE
+        Test-MyTestFunction -Verbose
+        Explanation of the function or its result. You can include multiple examples with additional .EXAMPLE lines
     #>
-
-    [CmdletBinding(SupportsShouldProcess=$True)]
+    
+    [CmdletBinding(SupportsShouldProcess = $True)]
     param(
-        [Parameter(Mandatory=$false)]
-        [string] $LogFile,
-
-        [ValidateSet("ERROR","WARNING","INFO")]
-        [Parameter(Mandatory=$true)]
-        [string] $Status,
-
-        [Parameter(Mandatory=$false)]
-        [String] $Source='n/a',
-
-        [Parameter(Mandatory=$false)]
-        [String] $System,
-
-        [Parameter(Mandatory=$true)]
-        $Message,
-
-        [Parameter(Mandatory=$false)]
-        [int] $MaxLogFileSizeMB = 10
+        [Parameter(Mandatory = $true)]
+        [ValidateNotNullOrEmpty()]
+        [String]$Vault
     )
 
-    begin{
-        $function = $($MyInvocation.MyCommand.Name)
-        Write-Verbose "Running $function"
-        $ret = $null
-    }
+    foreach($item in $PSBoundParameters.keys){ $params = "$($params) -$($item) $($PSBoundParameters[$item])" }
+    if ($PSCmdlet.ShouldProcess($params.Trim())) {
+        if (-not(Test-SecretVault -Name $Vault)) {
+            Unlock-SecretVault -Name $Vault
+        }
 
-    process{
-
-        if ($PSCmdlet.ShouldProcess($PSBoundParameters.Values)){
-            try{
-                if([String]::IsNullOrEmpty($LogFile)){
-                    $LogFile = $PSCommandPath -replace '.psm1', '.log'
+        $SecretInfo = Get-SecretInfo -Vault $Vault -WarningAction SilentlyContinue
+        $ret = $SecretInfo | ForEach-Object {
+            $Tags = foreach ($item in $_.Metadata.keys) {
+                if ($item -match 'Tags') {
+                    $($_.Metadata[$item])
                 }
-                Write-Verbose "Logfile: $LogFile"
-        
-                #region Test is logfile greater than MaxLogFileSizeMB
-                if (Test-Path $LogFile){
-                    $LogFileProperty = Get-Item $LogFile
-                    $LogFileSizeMB   = $LogFileProperty.Length / 1mb
-                    if($LogFileSizeMB -gt $MaxLogFileSizeMB){
-                        Rename-Item -Path $LogFile -NewName "$($LogFileProperty.Name)_$(Get-Date -f 'yyyyMMddHHmmss').log"
-                    }
-                }  
-                #endregion
-
-                #region write loginformation
-                if (-not(Test-Path $LogFile)){$null = New-Item $Logfile -type file}
-                switch($Status){
-                    'ERROR'   {$LogStatus = '[ERROR  ]'}
-                    'WARNING' {$LogStatus = '[WARNING]'}
-                    'INFO'    {$LogStatus = '[INFO   ]'}
-                }
-                $DateNow   = Get-Date -Format "dd.MM.yyyy HH:mm:ss.fff"
-                #endregion
-
-                #region Check User
-                if($PSVersionTable.PSVersion.Major -lt 6){
-                    $CurrentUser = $env:USERNAME
-                }
-                else{
-                    if($IsMacOS)  {
-                        $CurrentUser = id -un
-                    }
-                    if($IsLinux)  {
-                        $CurrentUser = id -un
-                    }
-                    if($IsWindows){
-                        $CurrentUser = $env:USERNAME
-                    }
-                }
-                #endregion
-
-                if (
-                    ($Message -is [System.Object[]]) -or
-                    ($Message -is [System.Management.Automation.PSCustomObject]) -or
-                    ($Message -is [System.Collections.Specialized.OrderedDictionary])
-                )
-                {
-                    for ($o = 0; $o -lt $Message.count; $o++){
-                        Add-Content $LogFile -value "$($DateNow)`t$($LogStatus)`t[$($CurrentUser)]`t[$($Source)]`t$($Message[$o])"
-                    }
-                }else{
-                    Add-Content $LogFile -value "$($DateNow)`t$($LogStatus)`t[$($CurrentUser)]`t[$($Source)]`t$($Message)"
-                }
-
-                $ret = $true
             }
-            catch [Exception]{
-                Write-Verbose "-> Catch block reached"
-                $ret = $false
-                $OutString = [PSCustomObject]@{
-                    Succeeded  = $false
-                    Function   = $function
-                    Scriptname = $($_.InvocationInfo.ScriptName)
-                    LineNumber = $($_.InvocationInfo.ScriptLineNumber)
-                    Activity   = $($_.CategoryInfo).Activity
-                    Message    = $($_.Exception.Message)
-                    Category   = $($_.CategoryInfo).Category
-                    Exception  = $($_.Exception.GetType().FullName)
-                    TargetName = $($_.CategoryInfo).TargetName
+            $Accessed = foreach ($item in $_.Metadata.keys) {
+                if ($item -match 'Accessed') {
+                    $($_.Metadata[$item])
                 }
-                $error.clear()
-                $OutString | Format-List | Out-String | ForEach-Object {Write-Host $_ -ForegroundColor Red}
+            }
+            $ApiUri = foreach ($item in $_.Metadata.keys) {
+                if ($item -match 'URL') {
+                    $($_.Metadata[$item])
+                }
+            }
+            [PSCustomObject]@{
+                Name     = $_.Name
+                ApiUri   = $ApiUri
+                Tag      = $Tags
+                Accessed = $Accessed
             }
         }
+        return $ret
     }
-
-    end{
-        #return $ret
-    }
-
 }
-
 function New-PSDiscordMessage {
     <#
     .SYNOPSIS
@@ -228,8 +138,9 @@ function New-PSDiscordMessage {
 
     process {
         Write-Verbose $('[', (Get-Date -f 'yyyy-MM-dd HH:mm:ss.fff'), ']', '[ Process ]', $function -Join ' ')
-        if ($PSCmdlet.ShouldProcess($PSBoundParameters.Values)) {
-            try {
+        foreach($item in $PSBoundParameters.keys){ $params = "$($params) -$($item) $($PSBoundParameters[$item])" }
+        if ($PSCmdlet.ShouldProcess($params.Trim())) {
+                try {
 
                 #region Facts
                 if ([String]::IsNullOrEmpty($FactTitle)) {
@@ -359,8 +270,9 @@ function New-PSMastodonMessage {
 
     process {
         Write-Verbose $('[', (Get-Date -f 'yyyy-MM-dd HH:mm:ss.fff'), ']', '[ Process ]', $function -Join ' ')
-        if ($PSCmdlet.ShouldProcess($PSBoundParameters.Values)) {
-            try {
+        foreach($item in $PSBoundParameters.keys){ $params = "$($params) -$($item) $($PSBoundParameters[$item])" }
+        if ($PSCmdlet.ShouldProcess($params.Trim())) {
+                try {
 
                 Write-Verbose "Posting to $WebhookUrl"
 
@@ -455,8 +367,9 @@ function New-PSTelegramMessage {
 
     process {
         Write-Verbose $('[', (Get-Date -f 'yyyy-MM-dd HH:mm:ss.fff'), ']', '[ Process ]', $function -Join ' ')
-        if ($PSCmdlet.ShouldProcess($PSBoundParameters.Values)) {
-            try {
+        foreach($item in $PSBoundParameters.keys){ $params = "$($params) -$($item) $($PSBoundParameters[$item])" }
+        if ($PSCmdlet.ShouldProcess($params.Trim())) {
+                try {
                 [Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12
                 if ($Html) {
                     $ParseMode = 'html'
@@ -565,8 +478,9 @@ function New-PSTwitterMessage {
 
     process {
         Write-Verbose $('[', (Get-Date -f 'yyyy-MM-dd HH:mm:ss.fff'), ']', '[ Process ]', $function -Join ' ')
-        if ($PSCmdlet.ShouldProcess($PSBoundParameters.Values)) {
-            if ($message.Length -gt 140) {
+        foreach($item in $PSBoundParameters.keys){ $params = "$($params) -$($item) $($PSBoundParameters[$item])" }
+        if ($PSCmdlet.ShouldProcess($params.Trim())) {
+                if ($message.Length -gt 140) {
                 Write-Warning ("Length of tweet is {0} characters, maximum amount is 140. Aborting..." -f $Message.Length)
                 break
             }
@@ -603,5 +517,295 @@ function New-PSTwitterMessage {
         Write-Verbose $('Finished in:', $Formatted -Join ' ')
         return $ret
     }
+}
+function Write-PSLog{
+    
+    <#
+
+        .SYNOPSIS
+        Logging
+
+        .DESCRIPTION
+        Log in to file
+
+        .PARAMETER LogFile
+        Full path- and filname to log.
+
+        .PARAMETER Status
+        ERROR, WARNING, or INFO
+
+        .PARAMETER Message
+        A string message to log.
+
+        .PARAMETER MaxLogFileSizeMB
+        Max file-size of the logfile, if the file is greather than max-size it will be renamed.
+
+        .EXAMPLE
+        Write-Log -Status WARNING -Source "Module-Test" -Message "Test Write-Log"
+
+        .NOTES
+        2021-08-10, Martin Walther, 1.0.0, Initial version
+
+    #>
+
+    [CmdletBinding(SupportsShouldProcess=$True)]
+    param(
+        [Parameter(Mandatory=$false)]
+        [string] $LogFile,
+
+        [ValidateSet("ERROR","WARNING","INFO")]
+        [Parameter(Mandatory=$true)]
+        [string] $Status,
+
+        [Parameter(Mandatory=$false)]
+        [String] $Source='n/a',
+
+        [Parameter(Mandatory=$false)]
+        [String] $System,
+
+        [Parameter(Mandatory=$true)]
+        $Message,
+
+        [Parameter(Mandatory=$false)]
+        [int] $MaxLogFileSizeMB = 10
+    )
+
+    begin{
+        $function = $($MyInvocation.MyCommand.Name)
+        Write-Verbose "Running $function"
+    }
+
+    process{
+
+        foreach($item in $PSBoundParameters.keys){ $params = "$($params) -$($item) $($PSBoundParameters[$item])" }
+        if ($PSCmdlet.ShouldProcess($params.Trim())) {
+                try{
+                if([String]::IsNullOrEmpty($LogFile)){
+                    $LogFile = $PSCommandPath -replace '.psm1', '.log'
+                }
+                Write-Verbose "Logfile: $LogFile"
+        
+                #region Test is logfile greater than MaxLogFileSizeMB
+                if (Test-Path $LogFile){
+                    $LogFileProperty = Get-Item $LogFile
+                    $LogFileSizeMB   = $LogFileProperty.Length / 1mb
+                    if($LogFileSizeMB -gt $MaxLogFileSizeMB){
+                        Rename-Item -Path $LogFile -NewName "$($LogFileProperty.Name)_$(Get-Date -f 'yyyyMMddHHmmss').log"
+                    }
+                }  
+                #endregion
+
+                #region write loginformation
+                if (-not(Test-Path $LogFile)){$null = New-Item $Logfile -type file}
+                switch($Status){
+                    'ERROR'   {$LogStatus = '[ERROR  ]'}
+                    'WARNING' {$LogStatus = '[WARNING]'}
+                    'INFO'    {$LogStatus = '[INFO   ]'}
+                }
+                $DateNow   = Get-Date -Format "dd.MM.yyyy HH:mm:ss.fff"
+                #endregion
+
+                #region Check User
+                if($PSVersionTable.PSVersion.Major -lt 6){
+                    $CurrentUser = $env:USERNAME
+                }
+                else{
+                    if($IsMacOS)  {
+                        $CurrentUser = id -un
+                    }
+                    if($IsLinux)  {
+                        $CurrentUser = id -un
+                    }
+                    if($IsWindows){
+                        $CurrentUser = $env:USERNAME
+                    }
+                }
+                #endregion
+
+                if (
+                    ($Message -is [System.Object[]]) -or
+                    ($Message -is [System.Management.Automation.PSCustomObject]) -or
+                    ($Message -is [System.Collections.Specialized.OrderedDictionary])
+                )
+                {
+                    for ($o = 0; $o -lt $Message.count; $o++){
+                        Add-Content $LogFile -value "$($DateNow)`t$($LogStatus)`t[$($CurrentUser)]`t[$($Source)]`t$($Message[$o])"
+                    }
+                }else{
+                    Add-Content $LogFile -value "$($DateNow)`t$($LogStatus)`t[$($CurrentUser)]`t[$($Source)]`t$($Message)"
+                }
+
+                $ret = $true
+            }
+            catch [Exception]{
+                Write-Verbose "-> Catch block reached"
+                $ret = $false
+                $OutString = [PSCustomObject]@{
+                    Succeeded  = $false
+                    Function   = $function
+                    Scriptname = $($_.InvocationInfo.ScriptName)
+                    LineNumber = $($_.InvocationInfo.ScriptLineNumber)
+                    Activity   = $($_.CategoryInfo).Activity
+                    Message    = $($_.Exception.Message)
+                    Category   = $($_.CategoryInfo).Category
+                    Exception  = $($_.Exception.GetType().FullName)
+                    TargetName = $($_.CategoryInfo).TargetName
+                }
+                $error.clear()
+                $OutString | Format-List | Out-String | ForEach-Object {Write-Host $_ -ForegroundColor Red}
+            }
+        }
+    }
+
+    end{
+        #return $ret
+    }
+
+}
+
+#Requires -Modules Microsoft.PowerShell.SecretManagement, Microsoft.PowerShell.SecretStore, SecretManagement.KeePass, BluebirdPS
+function Send-PSOctoMessage {
+    <#
+    .SYNOPSIS
+        Send messages to multiple messengers
+    .DESCRIPTION
+        A longer description of the function, its purpose, common use cases, etc.
+    .NOTES
+        Information or caveats about the function e.g. 'This function is not supported in Linux'
+    .LINK
+        Specify a URI to a help page, this will show when Get-Help -Online is used.
+    .PARAMETER SendToDiscord
+        Send message to Discord
+    .PARAMETER SendToTelegram
+        Send message to Telegram
+    .PARAMETER SendToMastodon
+        Send message to Mastodon
+    .PARAMETER SendToTwitter
+        Send message to Twitter
+    .PARAMETER Message
+        Send a message between 5 and 140 characters
+    .EXAMPLE
+        Send-PSOctoMessage -Message 'This is a Test-Message' -SendToDiscord
+    .EXAMPLE
+        Send-PSOctoMessage -Message 'This is a Test-Message' -SendToTelegram
+    .EXAMPLE
+        Send-PSOctoMessage -Message 'This is a Test-Message' -SendToMastodon
+    .EXAMPLE
+        Send-PSOctoMessage -Message 'This is a Test-Message' -SendToTwitter
+    .EXAMPLE
+        Send-PSOctoMessage -Message 'This is a Test-Message' -SendToDiscord -SendToTelegram -SendToMastodon -SendToTwitter
+    #>
+    
+    [CmdletBinding(SupportsShouldProcess = $True)]
+    param (
+        [Parameter(Mandatory = $false)]
+        [Switch] $SendToDiscord,
+
+        [Parameter(Mandatory = $false)]
+        [Switch]$SendToTelegram,
+
+        [Parameter(Mandatory = $false)]
+        [Switch] $SendToMastodon,
+
+        [Parameter(Mandatory = $false)]
+        [Switch] $SendToTwitter,
+
+        [Parameter(Mandatory = $false)]
+        [ValidateNotNullOrEmpty()]
+        [ValidateLength(5,140)]
+        [String] $Message
+    )
+
+    foreach($item in $PSBoundParameters.keys){ $params = "$($params) -$($item) $($PSBoundParameters[$item])" }
+    if ($PSCmdlet.ShouldProcess($params.Trim())) {
+
+        #region Secret
+        $SecretVault = 'PSOctomes'
+        $AllSecrets = Get-MWASecretsFromVault -Vault $SecretVault
+        $SecretObject = foreach ($item in $AllSecrets) {
+            try {
+                $Secret = Get-Secret -Vault $SecretVault -Name $item.Name -ErrorAction Stop
+                [PSCustomObject]@{
+                    Name   = $item.Name
+                    User   = $Secret.UserName
+                    ApiUri = $item.ApiUri
+                    Token  = [System.Net.NetworkCredential]::new($Secret.UserName, $Secret.Password).Password
+                }
+            }
+            catch {
+                $Error.Clear()
+            }
+        }
+        #endregion
+
+        #region Variables
+        if ([String]::IsNullOrEmpty($Message)) {
+            $Message = Get-Content -Path (Join-Path -Path $($PSScriptRoot).Replace('bin', 'data') -ChildPath 'input.txt')
+        }
+
+        if ($Message.Length -gt 140) {
+            $FColor = 'Yellow'
+        }
+        else {
+            $FColor = 'Green'
+        }
+        Write-Host ("Length of tweet is {0} characters." -f $Message.Length) -ForegroundColor $FColor
+        #endregion
+    
+        #region Discord
+        if ($SendToDiscord) {
+            $Properties = @{
+                #ApiUri             = "https://discord.com/api/webhooks"
+                SectionDescription = $Message
+                AuthorName         = 'tinu'
+                AuthorAvatar       = 'https://it.martin-walther.ch/wp-content/uploads/Bearded.jpg'
+                PSOctomes          = $SecretObject
+            }
+            .\bin\New-DiscordMessage.ps1 @Properties #-Verbose
+        }
+        #endregion
+
+        #region Telegram
+        if ($SendToTelegram) {
+            $Properties = @{
+                #ApiUri    = "https://api.telegram.org/bot"
+                Message   = $Message
+                Html      = $true
+                PSOctomes = $SecretObject
+            }
+            .\bin\New-TelegramMessage.ps1 @Properties #-Verbose
+        }
+        #endregion
+
+        #region Mastodon
+        if ($SendToMastodon) {
+            #$MastodonInstance = 'techhub.social'
+            $Properties = @{
+                #ApiUri    = "https://$($MastodonInstance)/api/v1/statuses"
+                Message   = $Message
+                PSOctomes = $SecretObject
+            }
+            .\bin\New-MastodonMessage.ps1 @Properties #-Verbose
+        }
+        #endregion
+
+        #region Twitter
+        if ($SendToTwitter) {
+            if ($Message.Length -gt 140) {
+                Write-Warning ("Length of tweet is {0} characters, maximum amount on twitter is 140. Aborting..." -f $Message.Length)
+            }
+            else {
+                $Properties = @{
+                    #ApiUri    = "https://api.twitter.com/2/tweets"
+                    Message   = $Message
+                    PSOctomes = $SecretObject
+                }
+                .\bin\New-TwitterMessage.ps1 @Properties #-Verbose
+            }
+        }
+        #endregion
+
+    }
+
 }
 #endregion

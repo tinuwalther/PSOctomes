@@ -85,5 +85,5 @@ I send this message to multiple messenger with #PowerShell and #PSOctomes.
 https://github.com/tinuwalther/PSOctomes
 "@
 
-.\Bin\Send-OctoMessage.ps1 -Message $Message -SendToTelegram -SendToDiscord -SendToMastodon -SendToTwitter
+Send-PSOctoMessage -Message $Message -SendToTelegram -SendToDiscord -SendToMastodon -SendToTwitter
 ````
