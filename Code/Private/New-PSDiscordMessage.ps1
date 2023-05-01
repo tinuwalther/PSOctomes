@@ -134,12 +134,12 @@ function New-PSDiscordMessage {
                     ErrorAction = 'Stop'
                 }
                 $ret = Invoke-RestMethod @Properties
-                $ret = @{ 'ok' = $true; 'result' = "Successfully send to discord $ret" }
+                $ret = [PSCustomObject]@{ 'ok' = $true; 'result' = "Successfully send to discord $ret" }
 
             }
             catch {
                 Write-Warning $('ScriptName:', $($_.InvocationInfo.ScriptName), 'LineNumber:', $($_.InvocationInfo.ScriptLineNumber), 'Message:', $($_.Exception.Message) -Join ' ')
-                $ret = @{ 'ok' = $false; 'result' = $($_.Exception.Message) }
+                $ret = [PSCustomObject]@{ 'ok' = $false; 'result' = $($_.Exception.Message) }
                 $Error.Clear()
             }
         }

@@ -82,7 +82,7 @@ function New-PSMastodonMessage {
             }
             catch {
                 Write-Warning $('ScriptName:', $($_.InvocationInfo.ScriptName), 'LineNumber:', $($_.InvocationInfo.ScriptLineNumber), 'Message:', $($_.Exception.Message) -Join ' ')
-                $ret = @{ 'ok' = $false; 'result' = $($_.Exception.Message) }
+                $ret = [PSCustomObject]@{ 'ok' = $false; 'result' = $($_.Exception.Message) }
                 $Error.Clear()
             }
         }
