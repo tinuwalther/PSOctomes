@@ -12,13 +12,13 @@
 RootModule = 'PSOctomes.psm1'
 
 # Version number of this module.
-ModuleVersion = '0.1.7'
+ModuleVersion = '0.1.8'
 
 # Supported PSEditions
 # CompatiblePSEditions = @()
 
 # ID used to uniquely identify this module
-GUID = 'c58ad40e-1577-4667-a88f-aa7af8783a5c'
+GUID = 'cc357334-6799-4e3b-af1f-7ed93d2bd770'
 
 # Author of this module
 Author = 'Martin Walther'
