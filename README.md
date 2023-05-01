@@ -44,17 +44,6 @@ git clone https://github.com/tinuwalther/PSOctomes
 cd ./PSOctomes
 ````
 
-Create your credential-file as KeePass-Database with the following entries:
-
-- Discord_Token, URL, Token as Password
-- Mastodon_Token, URL, Token as Password
-- Telegram_Token, URL, Token as Password
-- Telegram_ChatId, Id as Password
-- Twitter_ApiKey, Token as Password
-- Twitter_ApiSecret, Token as Password
-- Twitter_AccessToken, Token as Password
-- Twitter_AccessTokenSecret, Token as Password
-
 Install-Modules:
 
 ````powershell
@@ -64,17 +53,21 @@ Import-Module ./PSOctomes/ -Force
 
 Register SecretVault:
 
+Create your credential as Secrets with the following entries:
+
+- Discord_Token, URL, Token as Password
+- Mastodon_Token, URL, Token as Password
+- Telegram_Token, URL, Token as Password
+- Telegram_ChatId, Id as Password
+
 ````powershell
-Register-SecretVault -Name "PSOctomes" -ModuleName "SecretManagement.Keepass" -VaultParameters @{
-    Path = "$($env:USERPROFILE)\Do*ument*\PSOctomes.kdbx"
-    UseMasterPassword = $true
-}
+New-PSSecretStore -Register -Discord -Telegram -Mastodon -Twitter
 ````
 
 Test the access to the KeePass Vault:
 
 ````powershell
-Get-SecretInfo -Vault PSOctomes -Name Discord_Token | Select-Object -ExpandProperty Metadata
+Get-SecretInfo -Vault PSOctomes | Select-Object Name, @{N='URL';E={$_.Metadata.values}}
 ````
 
 and execute the command Send-PSOctoMessage
