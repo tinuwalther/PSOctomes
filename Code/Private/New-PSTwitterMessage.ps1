@@ -76,12 +76,13 @@ function New-PSTwitterMessage {
                 $Properties = @{
                     TweetText = $Message
                 }
-                $ret = Publish-Tweet @Properties
+                $Response = Publish-Tweet @Properties
+                $ret = [PSCustomObject]@{'messenger' = 'Twitter'; 'ok' = $Response.ok; 'result' = $Response.result }
 
             }
             catch {
                 Write-Warning $('ScriptName:', $($_.InvocationInfo.ScriptName), 'LineNumber:', $($_.InvocationInfo.ScriptLineNumber), 'Message:', $($_.Exception.Message) -Join ' ')
-                $ret = [PSCustomObject]@{ 'ok' = $false; 'result' = $($_.Exception.Message) }
+                $ret = [PSCustomObject]@{ 'messenger' = 'Twitter'; 'ok' = $false; 'result' = $($_.Exception.Message) }
                 $Error.Clear()
             }
         }

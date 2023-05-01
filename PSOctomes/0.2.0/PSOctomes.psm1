@@ -1,5 +1,5 @@
 <#
-    Generated at 05/01/2023 12:54:09 by Martin Walther
+    Generated at 05/01/2023 13:02:18 by Martin Walther
 #>
 #region namespace PSOctomes
 function Get-PSSecretsFromVault {
@@ -180,13 +180,13 @@ function New-PSDiscordMessage {
                     ContentType = 'application/json; charset=UTF-8'
                     ErrorAction = 'Stop'
                 }
-                $ret = Invoke-RestMethod @Properties
-                $ret = [PSCustomObject]@{ 'ok' = $true; 'result' = "Successfully send to discord $ret" }
+                $Response = Invoke-RestMethod @Properties
+                $ret = [PSCustomObject]@{ 'messenger' = 'Discord'; 'ok' = $true; 'result' = "Successfully send to discord $Response" }
 
             }
             catch {
                 Write-Warning $('ScriptName:', $($_.InvocationInfo.ScriptName), 'LineNumber:', $($_.InvocationInfo.ScriptLineNumber), 'Message:', $($_.Exception.Message) -Join ' ')
-                $ret = [PSCustomObject]@{ 'ok' = $false; 'result' = $($_.Exception.Message) }
+                $ret = [PSCustomObject]@{ 'messenger' = 'Discord'; 'ok' = $false; 'result' = $($_.Exception.Message) }
                 $Error.Clear()
             }
         }
@@ -281,12 +281,13 @@ function New-PSMastodonMessage {
                     Body        = (ConvertTo-Json -Depth 6 -InputObject $payload)
                     ErrorAction = 'Stop'
                 }
-                $ret = Invoke-RestMethod @Properties
+                $Response = Invoke-RestMethod @Properties
+                $ret = [PSCustomObject]@{'messenger' = 'Mastodon'; 'ok' = $Response.ok; 'result' = $Response.result }
 
             }
             catch {
                 Write-Warning $('ScriptName:', $($_.InvocationInfo.ScriptName), 'LineNumber:', $($_.InvocationInfo.ScriptLineNumber), 'Message:', $($_.Exception.Message) -Join ' ')
-                $ret = [PSCustomObject]@{ 'ok' = $false; 'result' = $($_.Exception.Message) }
+                $ret = [PSCustomObject]@{'messenger' = 'Mastodon'; 'ok' = $false; 'result' = $($_.Exception.Message) }
                 $Error.Clear()
             }
         }
@@ -388,12 +389,13 @@ function New-PSTelegramMessage {
                     ErrorAction = 'Stop'
                 }
 
-                $ret = Invoke-RestMethod @Properties
+                $Response = Invoke-RestMethod @Properties
+                $ret = [PSCustomObject]@{'messenger' = 'Telegram'; 'ok' = $Response.ok; 'result' = $Response.result }
 
             }
             catch {
                 Write-Warning $('ScriptName:', $($_.InvocationInfo.ScriptName), 'LineNumber:', $($_.InvocationInfo.ScriptLineNumber), 'Message:', $($_.Exception.Message) -Join ' ')
-                $ret = [PSCustomObject]@{ 'ok' = $false; 'result' = $($_.Exception.Message) }
+                $ret = [PSCustomObject]@{'messenger' = 'Telegram'; 'ok' = $false; 'result' = $($_.Exception.Message) }
                 $Error.Clear()
             }
         }
@@ -487,12 +489,13 @@ function New-PSTwitterMessage {
                 $Properties = @{
                     TweetText = $Message
                 }
-                $ret = Publish-Tweet @Properties
+                $Response = Publish-Tweet @Properties
+                $ret = [PSCustomObject]@{'messenger' = 'Twitter'; 'ok' = $Response.ok; 'result' = $Response.result }
 
             }
             catch {
                 Write-Warning $('ScriptName:', $($_.InvocationInfo.ScriptName), 'LineNumber:', $($_.InvocationInfo.ScriptLineNumber), 'Message:', $($_.Exception.Message) -Join ' ')
-                $ret = [PSCustomObject]@{ 'ok' = $false; 'result' = $($_.Exception.Message) }
+                $ret = [PSCustomObject]@{ 'messenger' = 'Twitter'; 'ok' = $false; 'result' = $($_.Exception.Message) }
                 $Error.Clear()
             }
         }

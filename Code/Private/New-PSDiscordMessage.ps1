@@ -133,13 +133,13 @@ function New-PSDiscordMessage {
                     ContentType = 'application/json; charset=UTF-8'
                     ErrorAction = 'Stop'
                 }
-                $ret = Invoke-RestMethod @Properties
-                $ret = [PSCustomObject]@{ 'ok' = $true; 'result' = "Successfully send to discord $ret" }
+                $Response = Invoke-RestMethod @Properties
+                $ret = [PSCustomObject]@{ 'messenger' = 'Discord'; 'ok' = $true; 'result' = "Successfully send to discord $Response" }
 
             }
             catch {
                 Write-Warning $('ScriptName:', $($_.InvocationInfo.ScriptName), 'LineNumber:', $($_.InvocationInfo.ScriptLineNumber), 'Message:', $($_.Exception.Message) -Join ' ')
-                $ret = [PSCustomObject]@{ 'ok' = $false; 'result' = $($_.Exception.Message) }
+                $ret = [PSCustomObject]@{ 'messenger' = 'Discord'; 'ok' = $false; 'result' = $($_.Exception.Message) }
                 $Error.Clear()
             }
         }

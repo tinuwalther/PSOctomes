@@ -77,12 +77,13 @@ function New-PSMastodonMessage {
                     Body        = (ConvertTo-Json -Depth 6 -InputObject $payload)
                     ErrorAction = 'Stop'
                 }
-                $ret = Invoke-RestMethod @Properties
+                $Response = Invoke-RestMethod @Properties
+                $ret = [PSCustomObject]@{'messenger' = 'Mastodon'; 'ok' = $Response.ok; 'result' = $Response.result }
 
             }
             catch {
                 Write-Warning $('ScriptName:', $($_.InvocationInfo.ScriptName), 'LineNumber:', $($_.InvocationInfo.ScriptLineNumber), 'Message:', $($_.Exception.Message) -Join ' ')
-                $ret = [PSCustomObject]@{ 'ok' = $false; 'result' = $($_.Exception.Message) }
+                $ret = [PSCustomObject]@{'messenger' = 'Mastodon'; 'ok' = $false; 'result' = $($_.Exception.Message) }
                 $Error.Clear()
             }
         }

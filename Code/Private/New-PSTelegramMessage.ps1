@@ -84,12 +84,13 @@ function New-PSTelegramMessage {
                     ErrorAction = 'Stop'
                 }
 
-                $ret = Invoke-RestMethod @Properties
+                $Response = Invoke-RestMethod @Properties
+                $ret = [PSCustomObject]@{'messenger' = 'Telegram'; 'ok' = $Response.ok; 'result' = $Response.result }
 
             }
             catch {
                 Write-Warning $('ScriptName:', $($_.InvocationInfo.ScriptName), 'LineNumber:', $($_.InvocationInfo.ScriptLineNumber), 'Message:', $($_.Exception.Message) -Join ' ')
-                $ret = [PSCustomObject]@{ 'ok' = $false; 'result' = $($_.Exception.Message) }
+                $ret = [PSCustomObject]@{'messenger' = 'Telegram'; 'ok' = $false; 'result' = $($_.Exception.Message) }
                 $Error.Clear()
             }
         }
