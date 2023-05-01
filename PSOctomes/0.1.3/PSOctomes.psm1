@@ -1,5 +1,5 @@
 <#
-    Generated at 05/01/2023 11:50:04 by Martin Walther
+    Generated at 05/01/2023 12:19:30 by Martin Walther
 #>
 #region namespace PSOctomes
 function Get-PSSecretsFromVault {
@@ -174,7 +174,7 @@ function New-PSDiscordMessage {
                     $ApiUri = $PSOctomes | Where-Object User -eq Discord_Token | Select-Object -ExpandProperty ApiUri
                 }
                 $Properties = @{
-                    Uri         = "$($ApiUri)/$($Token)" #"https://discord.com/api/webhooks/$($Token)"
+                    Uri         = "$($ApiUri)/$(ConvertFrom-SecureString -SecureString $Token -AsPlainText)" #"https://discord.com/api/webhooks/$($Token)"
                     Body        = (ConvertTo-Json -Depth 6 -InputObject $payload)
                     Method      = 'POST'
                     ContentType = 'application/json; charset=UTF-8'
@@ -274,7 +274,7 @@ function New-PSMastodonMessage {
                 $Token = $PSOctomes | Where-Object User -eq Mastodon_Token | Select-Object -ExpandProperty Token
                 $ApiUri = $PSOctomes | Where-Object User -eq Mastodon_Token | Select-Object -ExpandProperty ApiUri
                 $Properties = @{
-                    Uri         = "$($ApiUri)?access_token=$($Token)"
+                    Uri         = "$($ApiUri)?access_token=$(ConvertFrom-SecureString -SecureString $Token -AsPlainText)"
                     Method      = 'POST'
                     ContentType = 'application/json; charset=UTF-8'
                     Body        = (ConvertTo-Json -Depth 6 -InputObject $payload)
@@ -368,7 +368,7 @@ function New-PSTelegramMessage {
 
                 $ChatID = $PSOctomes | Where-Object User -eq Telegram_ChatId | Select-Object -ExpandProperty Token
                 $payload = @{
-                    "chat_id"                  = $ChatID
+                    "chat_id"                  = ConvertFrom-SecureString -SecureString $ChatID -AsPlainText
                     "text"                     = $Message
                     "parse_mode"               = $ParseMode
                     "disable_web_page_preview" = $false
@@ -380,7 +380,7 @@ function New-PSTelegramMessage {
                 $Token = $PSOctomes | Where-Object User -eq Telegram_Token | Select-Object -ExpandProperty Token
                 $ApiUri = $PSOctomes | Where-Object User -eq Telegram_Token | Select-Object -ExpandProperty ApiUri
                 $Properties = @{
-                    Uri         = "$($ApiUri)$($Token)/sendMessage" #"https://api.telegram.org/bot$($Token)/sendMessage"
+                    Uri         = "$($ApiUri)$(ConvertFrom-SecureString -SecureString $Token -AsPlainText)/sendMessage" #"https://api.telegram.org/bot$($Token)/sendMessage"
                     Body        = (ConvertTo-Json -Depth 6 -InputObject $payload)
                     Method      = 'POST'
                     ContentType = 'application/json; charset=UTF-8'
@@ -825,12 +825,11 @@ function Send-PSOctoMessage {
         $AllSecrets = Get-PSSecretsFromVault -Vault $SecretVault
         $SecretObject = foreach ($item in $AllSecrets) {
             try {
-                $Secret = Get-Secret -Vault $SecretVault -Name $item.Name -ErrorAction Stop
                 [PSCustomObject]@{
                     Name   = $item.Name
-                    User   = $Secret.UserName
+                    User   = $item.Name
                     ApiUri = $item.ApiUri
-                    Token  = [System.Net.NetworkCredential]::new($Secret.UserName, $Secret.Password).Password
+                    Token  = Get-Secret  -Vault $SecretVault -Name $item.Name -ErrorAction Stop
                 }
             }
             catch {

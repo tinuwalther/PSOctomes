@@ -65,7 +65,7 @@ function New-PSTelegramMessage {
 
                 $ChatID = $PSOctomes | Where-Object User -eq Telegram_ChatId | Select-Object -ExpandProperty Token
                 $payload = @{
-                    "chat_id"                  = $ChatID
+                    "chat_id"                  = ConvertFrom-SecureString -SecureString $ChatID -AsPlainText
                     "text"                     = $Message
                     "parse_mode"               = $ParseMode
                     "disable_web_page_preview" = $false
@@ -77,7 +77,7 @@ function New-PSTelegramMessage {
                 $Token = $PSOctomes | Where-Object User -eq Telegram_Token | Select-Object -ExpandProperty Token
                 $ApiUri = $PSOctomes | Where-Object User -eq Telegram_Token | Select-Object -ExpandProperty ApiUri
                 $Properties = @{
-                    Uri         = "$($ApiUri)$($Token)/sendMessage" #"https://api.telegram.org/bot$($Token)/sendMessage"
+                    Uri         = "$($ApiUri)$(ConvertFrom-SecureString -SecureString $Token -AsPlainText)/sendMessage" #"https://api.telegram.org/bot$($Token)/sendMessage"
                     Body        = (ConvertTo-Json -Depth 6 -InputObject $payload)
                     Method      = 'POST'
                     ContentType = 'application/json; charset=UTF-8'

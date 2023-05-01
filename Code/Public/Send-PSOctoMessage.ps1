@@ -58,12 +58,11 @@ function Send-PSOctoMessage {
         $AllSecrets = Get-PSSecretsFromVault -Vault $SecretVault
         $SecretObject = foreach ($item in $AllSecrets) {
             try {
-                $Secret = Get-Secret -Vault $SecretVault -Name $item.Name -ErrorAction Stop
                 [PSCustomObject]@{
                     Name   = $item.Name
-                    User   = $Secret.UserName
+                    User   = $item.Name
                     ApiUri = $item.ApiUri
-                    Token  = [System.Net.NetworkCredential]::new($Secret.UserName, $Secret.Password).Password
+                    Token  = Get-Secret  -Vault $SecretVault -Name $item.Name -ErrorAction Stop
                 }
             }
             catch {
