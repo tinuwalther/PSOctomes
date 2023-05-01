@@ -147,7 +147,7 @@ if($TestsResult.FailedCount -eq 0){
         CompanyName       = $ModuleCompany
         RootModule        = "$($ModuleName).psm1"
         PowerShellVersion = '5.1'
-        RequiredModules   = @('Microsoft.PowerShell.SecretManagement', 'Microsoft.PowerShell.SecretStore', 'SecretManagement.KeePass', 'BluebirdPS')
+        RequiredModules   = @('Microsoft.PowerShell.SecretManagement', 'Microsoft.PowerShell.SecretStore', 'BluebirdPS')
     }
     New-ModuleManifest @ModuleManifestSplat
 

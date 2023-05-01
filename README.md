@@ -76,7 +76,7 @@ Test the access to the KeePass Vault:
 Get-SecretInfo -Vault PSOctomes -Name Discord_Token | Select-Object -ExpandProperty Metadata
 ````
 
-and execute the script Send-OctoMessage.ps1
+and execute the command Send-PSOctoMessage
 
 ````powershell
 $Message = @"

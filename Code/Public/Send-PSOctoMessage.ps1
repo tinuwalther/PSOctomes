@@ -3,7 +3,7 @@ function Send-PSOctoMessage {
     .SYNOPSIS
         Send messages to multiple messengers
     .DESCRIPTION
-        Send messages to multiple messengers. Supported Messenger Discord, Telegram, Mastodon, Twitter
+        Send messages to multiple messengers. Supported Messenger are Discord, Telegram, Mastodon, Twitter.
     .NOTES
         Information or caveats about the function e.g. 'This function is not supported in Linux'
     .LINK

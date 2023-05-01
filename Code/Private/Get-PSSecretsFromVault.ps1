@@ -28,16 +28,6 @@ function Get-PSSecretsFromVault {
 
         $SecretInfo = Get-SecretInfo -Vault $Vault -WarningAction SilentlyContinue
         $ret = $SecretInfo | ForEach-Object {
-            $Tags = foreach ($item in $_.Metadata.keys) {
-                if ($item -match 'Tags') {
-                    $($_.Metadata[$item])
-                }
-            }
-            $Accessed = foreach ($item in $_.Metadata.keys) {
-                if ($item -match 'Accessed') {
-                    $($_.Metadata[$item])
-                }
-            }
             $ApiUri = foreach ($item in $_.Metadata.keys) {
                 if ($item -match 'URL') {
                     $($_.Metadata[$item])
@@ -46,8 +36,6 @@ function Get-PSSecretsFromVault {
             [PSCustomObject]@{
                 Name     = $_.Name
                 ApiUri   = $ApiUri
-                Tag      = $Tags
-                Accessed = $Accessed
             }
         }
         return $ret
